@@ -63,8 +63,8 @@ else:
     
     json_data['version'] = version_string_new
     json_data['versiondate'] = datetime_now
-    json_data['linksnapshot'] = "https://github.com/ohAnd/dtuGateway/releases/download/snapshot/energyCostSaver_snapshot_" + version_string_new + ".bin"
-    json_data['link'] = "https://github.com/ohAnd/dtuGateway//releases/latest/download/energyCostSaver_release_" + version_string_new + ".bin"
+    json_data['linksnapshot'] = "https://github.com/ohAnd/dtuGateway/releases/download/snapshot/energyCostSaver_ESP8266_snapshot_" + version_string_new + ".bin"
+    json_data['link'] = "https://github.com/ohAnd/dtuGateway//releases/latest/download/energyCostSaver_ESP8266_release_" + version_string_new + ".bin"
     
     # Save the updated JSON data back to the file
     with open(version_json, 'w', encoding='ascii') as file:
