@@ -1,0 +1,71 @@
+name: PlatformIO CI snapshot release
+
+on:
+  push:
+    branches:
+      - develop
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        id: extract_branch
+
+      - name: write temp file with build number and set to env variable
+        run: |
+          touch ${{ github.workspace }}/include/buildnumber.txt
+          printf -v BUILDNUMBER "%04d" ${{github.run_number}}
+          echo "${BUILDNUMBER}_${{ steps.extract_branch.outputs.branch }}" >> ${{ github.workspace }}/include/buildnumber.txt
+          echo "got current buildnumber and saved: "
+          cat ${{ github.workspace }}/include/buildnumber.txt
+          echo "CURRENT_BUILDNUMBER=$BUILDNUMBER" >> $GITHUB_ENV
+
+      - name: Build PlatformIO Project
+        run: pio run
+
+      - name: got current version and changing firmware name after building
+        run: |
+            VERSIONNUMBER=$(python ${{ github.workspace }}/version_inc.py getversion 2>&1)
+            echo "got versionnumber: " $VERSIONNUMBER
+            echo "CURRENT_VERSIONNUMBER=$VERSIONNUMBER" >> $GITHUB_ENV
+            mv .pio/build/esp12e/firmware.bin .pio/build/energyCostSaver_ESP8266_snapshot_$VERSIONNUMBER.bin
+            mv .pio/build/esp32/firmware.bin .pio/build/energyCostSaver_ESP32_snapshot_$VERSIONNUMBER.bin
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: energyCostSaver_snapshot_${{ env.CURRENT_VERSIONNUMBER }}
+          path: |
+            .pio/build/energyCostSaver_ESP8266_snapshot_${{ env.CURRENT_VERSIONNUMBER }}.bin
+            .pio/build/energyCostSaver_ESP32_snapshot_${{ env.CURRENT_VERSIONNUMBER }}.bin
+
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "snapshot"
+          prerelease: true
+          title: "Latest snapshot v${{ env.CURRENT_VERSIONNUMBER }}"
+          files: |
+            .pio/build/energyCostSaver_ESP8266_snapshot_${{ env.CURRENT_VERSIONNUMBER }}.bin
+            .pio/build/energyCostSaver_ESP32_snapshot_${{ env.CURRENT_VERSIONNUMBER }}.bin
+            include/version.json
+
+
+                
+                
