@@ -28,8 +28,8 @@ const char INDEX_HTML[] PROGMEM = R"=====(
                 <!-- <h2>settings</h2> -->
             </div>
             <div class="popupHeaderTabs">
-                <div>bindings</div>
-                <div>dtu</div>
+                <div>consumer device</div>
+                <div>energy costs</div>
                 <div class="selected">wifi</div>
             </div>
         </div>
@@ -63,105 +63,64 @@ const char INDEX_HTML[] PROGMEM = R"=====(
                 </div>
             </div>
         </div>
-        <div class="popupContent" id="bindings">
-            <div id="openhabSection">
-                <h3 id="test"><input type="checkbox" id="openhabActive"> openhab</h3>
-                <div>
-                    <p>define your openhab instance</p>
-                </div>
-                <div>
-                    IP to openhab:
-                </div>
-                <div>
-                    <input type="text" id="openhabIP" class="ipv4Input" name="ipv4" placeholder="xxx.xxx.xxx.xxx">
-                </div>
-                <div>
-                    openHab item prefix for U,I,P,dE,TE per channel:
-                </div>
-                <div>
-                    <input type="text" id="ohItemPrefix" maxlength="32">
-                </div>
+        <div class="popupContent" id="consumer device">
+            <div>
+                Name of your device (dishwasher, washing machine, ...):
+            </div>
+            <div>
+                <input type="text" id="deviceName">
             </div>
             <hr>
-            <div id="mqttSection">
-                <h3><input type="checkbox" id="mqttActive"> MQTT connection</h3>
-                <div>
-                    <p>publish all data to a specific MQTT broker and subscribing to the requested powersetting</p>
-                </div>
-                <div>
-                    IP/port to MQTT broker (e.g. 192.168.178.100:1883):
-                </div>
-                <div>
-                    <input type="text" id="mqttIP" class="ipv4Input" name="ipv4" placeholder="xxx.xxx.xxx.xxx">
-                </div>
-                <!-- <div> -->
-                <!-- <input type="checkbox" id="mqttUseTLS"> TLS connection (e.g. 123456789.s1.eu.hivemq.cloud:8883) -->
-                <!-- </div> -->
-                <div>
-                    <br>specify user on your mqtt broker instance:
-                </div>
-                <div>
-                    <input type="text" id="mqttUser" value="please type in" required maxlength="64">
-                </div>
-                <div>
-                    password for the given mqtt user (<i class="passcheck" value="invisible">show</i>):
-                </div>
-                <div>
-                    <input type="password" id="mqttPassword" value="admin12345" required maxlength="64">
-                </div>
-                <div>
-                    MQTT main topic for this dtu (e.g. dtu_12345678 will appear as 'dtu_12345678/grid/U' in the broker -
-                    has to be unique in your setup):
-                </div>
-                <div>
-                    <input type="text" id="mqttMainTopic" maxlength="32">
-                </div>
-                <div>
-                    <input type="checkbox" id="mqttHAautoDiscoveryON"> HomeAssistant Auto Discovery <br><small>(On =
-                        config is send once after every restart, Off = delete the sensor from HA instantly - using the
-                        same main topic as set above)</small><br>
-                </div>
+            <div>
+                duration / runtime of the program in hours (round up to full hours):
+            </div>
+            <div>
+                <input type="text" id="deviceRuntime">
+            </div>
+            <hr>
+            <div>
+                maximum wait time in hours for the start of the program:
+            </div>
+            <div>
+                <input type="text" id="deviceMaxWaittime">
             </div>
             <hr>
             <div style="text-align: center;">
-                <b onclick="changeBindingsData()" id="btnSaveWifiSettings" class="form-button btn">save</b>
+                <b onclick="changeDtuData()" id="btnSaveDtuSettings" class="form-button btn">save</b>
                 <b onclick="hide('#changeSettings')" id="btnSettingsClose" class="form-button btn">close</b>
             </div>
         </div>
-        <div class="popupContent" id="dtu">
+        <div class="popupContent" id="energy costs">
             <div>
-                dtu host IP in your local network:
-            </div>
-            <div>
-                <input type="text" id="dtuHostIpDomain" class="ipv4Input" name="ipv4" placeholder="xxx.xxx.xxx.xxx">
+                energy price per kWh will be calculated<br>
+                - by the EPEX spot market price<br>
+                - the fix costs per kWh without additional taxes<br>
+                - the fix costs per kWh with additional taxes (e.g. 16% VAT)<br>
+                example:<br>
+                0.10 &euro; + 0.05 &euro; + 0.02 &euro; + ((0.10 &euro; + 0.02 &euro;) * 0.16) = 0.1892 &euro; per kWh
             </div>
             <hr>
             <div>
-                dtu request cycle in seconds (data update):
+                fix costs per kWh in &euro; without tax free:
             </div>
             <div>
-                <input type="number" id="dtuDataCycle" min="1" max="60" placeholder="31">
-            </div>
-            <div>
-                dtu cloud update pause (no cycle update every full 15 min):
-                <input type="checkbox" id="dtuCloudPause">
+                <input type="number" id="energyFixCostsPerKwhTaxFree" placeholder="0.0000">
             </div>
             <hr>
-            <div style="color: gray;">
-                <div><small><i>currently not supported/ needed</i></small><br>
-                    dtu local wireless access point:
-                </div>
-                <div>
-                    <input type="text" id="dtuSsid" value="please type in" required maxlength="64" disabled>
-                </div>
-                <div>
-                    dtu wifi password (<i class="passcheck" value="invisible">show</i>):
-                </div>
-                <div>
-                    <input type="password" id="dtuPassword" value="admin12345" required maxlength="64" disabled>
-                </div>
+            <div>
+                fix costs per kWh in &euro; non tax free:
             </div>
-
+            <div>
+                <input type="number" id="energyFixCostsPerKwhTax" min="0" max="10" placeholder="0.01">
+            </div>
+            <hr>
+            <div>
+                tax rate in % (e.g. 16%):
+            </div>
+            <div>
+                <input type="number" id="energyTaxRate" min="0" max="100" placeholder="0">
+            </div>
+            <hr>
             <div style="text-align: center;">
                 <b onclick="changeDtuData()" id="btnSaveDtuSettings" class="form-button btn">save</b>
                 <b onclick="hide('#changeSettings')" id="btnSettingsClose" class="form-button btn">close</b>
@@ -273,12 +232,12 @@ const char INDEX_HTML[] PROGMEM = R"=====(
                 <div class="panelValueBox">
                     <b id="tgtDelayHours" class="panelValue valueText">-- h</b>
                     <div class="panelValueBoxDetail">
-                        <small>price now</small>
-                        <b id="price_now" class="panelValueSmall valueText">0.00 &euro;</b>
+                        <small>price now<br></small>
+                        <b id="price_now" class="panelValueSmall valueText">0.00</b><i class="currency">&euro;</i>
                     </div>
                     <div class="panelValueBoxDetail">
-                        <small>price delay</small>
-                        <b id="price_delay" class="panelValueSmall valueText">0.00 &euro;</b>
+                        <small>price delay<br></small>
+                        <b id="price_delay" class="panelValueSmall valueText">0.00</b><i class="currency">&euro;</i>
                     </div>
                 </div>
             </div>
@@ -297,20 +256,20 @@ const char INDEX_HTML[] PROGMEM = R"=====(
                 </div>
                 <div class="panelValueBox">
                     <div class="panelValueBoxDetail">
-                        <small class="panelHead">last EPEX update</small>
-                        <b id="last_response" class="panelValueSmall" style="color: rgb(0, 153, 255);">00:00:00</b>
+                        <small class="panelHead">last EPEX update</small><br>
+                        <b id="last_response" class="panelValueSmall">00:00:00</b>
                     </div>
                     <div class="panelValueBoxDetail">
-                        <small class="panelHead">gw local</small>
-                        <b id="gwtime_small" class="panelValueSmall" style="color: rgb(0, 153, 255);">00:00:00</b>
+                        <small class="panelHead">gw local</small><br>
+                        <b id="gwtime_small" class="panelValueSmall">00:00:00</b>
                     </div>
 
                     <div class="panelValueBoxDetail">
-                        <small class="panelHead">gw start</small>
+                        <small class="panelHead">gw start</small><br>
                         <b id="gwStartTime" class="panelValueSmall">00:00:00</b>
                     </div>
                     <div class="panelValueBoxDetail">
-                        <small class="panelHead">gw ntp</small>
+                        <small class="panelHead">gw ntp</small><br>
                         <b id="gwNTPtime" class="panelValueSmall">00:00:00</b>
                     </div>
                 </div>
@@ -348,7 +307,7 @@ const char INDEX_HTML[] PROGMEM = R"=====(
 
     <script>
         let timerRemainingProgess = 0;
-        let waitTime = 31000;
+        let waitTime = 60000 * 15;
         let remainingTime = waitTime;
 
         let timerInfoUpdate = 0;
@@ -410,8 +369,8 @@ const char INDEX_HTML[] PROGMEM = R"=====(
             $(id).show(200);
             if (id == '#changeSettings') {
                 getWIFIdata();
-                getDTUdata();
-                getBindingsData();
+                getEnergyData();
+                getDeviceData();
             }
             if (id == '#updatePowerLimit') {
                 getPowerLimitData();
@@ -445,6 +404,8 @@ const char INDEX_HTML[] PROGMEM = R"=====(
         function remainingResponse() {
             if (remainingTime > 0) {
                 var remainingTime_width = (remainingTime / waitTime) * 100;
+                if (remainingTime_width > 100)
+                    remainingTime_width = 100;
                 $('#updateTime').width(remainingTime_width + "%");
             }
             remainingTime = remainingTime - 100;
@@ -455,9 +416,12 @@ const char INDEX_HTML[] PROGMEM = R"=====(
 
         function refreshData(data) {
 
-            $('#price_now').html((data.energyCostNow).toFixed(2) + " &euro;");
-            $('#price_delay').html((data.energyCostSave).toFixed(2) + " &euro;");
-            $('#tgtDelayHours').html(data.tgtDelayHours + " h");
+            // $('#price_now').html((data.energyCostNow).toFixed(2) + " &euro;");
+            checkValueUpdate('#price_now', (data.result.energyCostNow).toFixed(2));
+            // $('#price_delay').html((data.energyCostSave).toFixed(2) + " &euro;");
+            checkValueUpdate('#price_delay', (data.result.energyCostSave).toFixed(2));
+            // $('#tgtDelayHours').html(data.tgtDelayHours + " h");
+            checkValueUpdate('#tgtDelayHours', data.result.tgtDelayHours + " h");
 
             $('#gwtime').html(getTime(data.ntpStamp));
             $('#gwtime2').html(getTime(data.ntpStamp, "date"));
@@ -481,9 +445,11 @@ const char INDEX_HTML[] PROGMEM = R"=====(
         function refreshInfo(data) {
 
             var wifiGWPercent = Math.round(data.wifiConnection.rssiGW);
-            $('#rssitext_local').html(wifiGWPercent + '%');
+            // $('#rssitext_local').html(wifiGWPercent + '%');
+            checkValueUpdate('#rssitext_local', wifiGWPercent + '%');
 
-            $('#firmware').html("fw version: " + data.firmware.version);
+            // $('#firmware').html("fw version: " + data.firmware.version);
+            checkValueUpdate('#firmware', "fw version: " + data.firmware.version);
 
             if (data.firmware.selectedUpdateChannel == 0) { $("#relChanStable").addClass("selected"); $("#relChanSnapshot").removeClass("selected"); }
             else { $("#relChanStable").removeClass("selected"); $("#relChanSnapshot").addClass("selected"); }
@@ -556,9 +522,10 @@ const char INDEX_HTML[] PROGMEM = R"=====(
 
         function drawBarDiagram(data) {
             var jsonData = data.energyCosts;
-            var currentHour = data.currentHour;
-            var minStartHour = data.minStartHour;
-            var duration = data.tgtDurationInHours;
+            var currentHour = data.result.currentHour;
+            var currentHourBar = currentHour;
+            var tgtStartHour = data.result.tgtStartHour;
+            var duration = data.device.tgtDurationInHours;
             var barDiagram = document.getElementsByClassName("bar-diagram")[0];
 
             // before appending new data, clear the old one
@@ -581,7 +548,7 @@ const char INDEX_HTML[] PROGMEM = R"=====(
                 var entry = jsonData[i];
                 var value = entry.value;
                 var heightPercentage = (value / maxValue) * 100;
-                console.log("(" + i + ")value: " + value + " %: " + heightPercentage);
+                // console.log("(" + i + ")value: " + value + " %: " + heightPercentage);
 
                 // create the bar container
                 var barContainer = document.createElement("div");
@@ -596,7 +563,10 @@ const char INDEX_HTML[] PROGMEM = R"=====(
                 var bar = document.createElement("div");
                 bar.className = "bar";
                 bar.style.height = heightPercentage + "%";
-                if (currentHour >= minStartHour && currentHour < minStartHour + duration) {
+
+                // set the color of the bar based where program should run
+
+                if ((currentHour % 24) >= tgtStartHour && (currentHour % 24) < (tgtStartHour + duration)) {
                     bar.style.backgroundColor = "green";
                 }
 
@@ -615,68 +585,25 @@ const char INDEX_HTML[] PROGMEM = R"=====(
             }
         }
 
-        function getDTUdata() {
-            // 
+        function getEnergyData() {
             $('#btnSaveDtuSettings').css('opacity', '1.0');
             $('#btnSaveDtuSettings').attr('onclick', "changeDtuData();")
 
-            dtuData = cacheInfoData.dtuConnection;
-
             // get networkdata
-            $('#dtuHostIpDomain').val(dtuData.dtuHostIpDomain);
-            $('#dtuDataCycle').val(dtuData.dtuDataCycle);
-            if (dtuData.dtuCloudPause) {
-                $('#dtuCloudPause').prop("checked", true);
-            } else {
-                $('#dtuCloudPause').prop("checked", false);
-            }
-
-            $('#dtuSsid').val(dtuData.dtuSsid);
-            $('#dtuPassword').val(dtuData.dtuPassword);
+            // $('#energyFixCostsPerKwhTaxFree').val(data.energyFixCostsPerKwhTaxFree);
+            // $('#energyFixCostsPerKwhTax').val(data.energyFixCostsPerKwhTax);
+            // $('#energyTaxRate').val(data.energyTaxRate);
 
         }
 
-        function getBindingsData() {
+        function getDeviceData() {
             // active
             $('#btnSaveDtuSettings').css('opacity', '1.0');
             $('#btnSaveDtuSettings').attr('onclick', "changeDtuData();")
 
-            ohData = cacheInfoData.openHabConnection;
-            mqttData = cacheInfoData.mqttConnection;
-
-            // get networkdata
-            if (ohData.ohActive) {
-                $('#openhabActive').prop("checked", true);
-                $('#openhabSection').css('color', '');
-            } else {
-                $('#openhabActive').prop("checked", false);
-                $('#openhabSection').css('color', 'grey');
-            }
-            $('#openhabIP').val(ohData.ohHostIp);
-            $('#ohItemPrefix').val(ohData.ohItemPrefix);
-
-            if (mqttData.mqttActive) {
-                $('#mqttActive').prop("checked", true);
-                $('#mqttSection').css('color', '');
-            } else {
-                $('#mqttActive').prop("checked", false);
-                $('#mqttSection').css('color', 'grey');
-            }
-            if (mqttData.mqttUseTLS) {
-                $('#mqttUseTLS').prop("checked", true);
-            } else {
-                $('#mqttUseTLS').prop("checked", false);
-            }
-            $('#mqttIP').val(mqttData.mqttIp + ":" + mqttData.mqttPort);
-            $('#mqttUser').val(mqttData.mqttUser);
-            $('#mqttPassword').val(mqttData.mqttPass);
-            $('#mqttMainTopic').val(mqttData.mqttMainTopic);
-
-            if (mqttData.mqttHAautoDiscoveryON) {
-                $('#mqttHAautoDiscoveryON').prop("checked", true);
-            } else {
-                $('#mqttHAautoDiscoveryON').prop("checked", false);
-            }
+            $('#deviceName').val(cacheData.device.deviceName);
+            $('#deviceRuntime').val(cacheData.device.tgtDurationInHours);
+            $('#deviceMaxWaittime').val(cacheData.device.maxWaitTime);
         }
 
         $('.passcheck').click(function () {
@@ -695,15 +622,6 @@ const char INDEX_HTML[] PROGMEM = R"=====(
                 $('.passcheck').html("show");
             }
         });
-
-        function getPowerLimitData() {
-            // 
-            $('#btnSetPowerLimit').css('opacity', '1.0');
-            $('#btnSetPowerLimit').attr('onclick', "changePowerLimit();")
-
-            // show last set value in input field
-            $('#powerLimitSetNew').val(cacheData.inverter.pLimSet);
-        }
 
         function changeWifiData() {
             var ssid = $('#wifiSSIDsend').val();
@@ -907,52 +825,6 @@ const char INDEX_HTML[] PROGMEM = R"=====(
             }
 
             hide('#changeSettings');
-            return;
-        }
-
-        function changePowerLimit() {
-
-            var powerLimitSend = $('#powerLimitSetNew').val();
-
-            var data = {};
-            data["powerLimitSend"] = powerLimitSend;
-
-            console.log("send to server: powerLimitSend: " + powerLimitSend);
-
-            const urlEncodedDataPairs = [];
-
-            // Turn the data object into an array of URL-encoded key/value pairs.
-            for (const [name, value] of Object.entries(data)) {
-                urlEncodedDataPairs.push(
-                    `${encodeURIComponent(name)}=${encodeURIComponent(value)}`,
-                );
-                console.log("push: " + name + " - value: " + value);
-            }
-
-            // Combine the pairs into a single string and replace all %-encoded spaces to
-            // the '+' character; matches the behavior of browser form submissions.
-            const urlEncodedData = urlEncodedDataPairs.join("&").replace(/%20/g, "+");
-
-
-            var xmlHttp = new XMLHttpRequest();
-            xmlHttp.open("POST", "/updatePowerLimit", false); // false for synchronous request
-            xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-
-            // Finally, send our data.
-            xmlHttp.send(urlEncodedData);
-
-            strResult = JSON.parse(xmlHttp.responseText);
-            console.log("got from server: " + strResult);
-            console.log("got from server - strResult.PowerLimit: " + strResult.PowerLimit + " - cmp with: " + powerLimitSend);
-
-            // if (strResult.openhabHostIp == openhabHostIpSend && strResult.mqttBrokerIp == mqttIpSend && strResult.mqttBrokerUser == mqttUserSend) {
-            //   console.log("check saved data - OK");
-            //   alert("bindings Settings change\n__________________________________\n\nYour settings were successfully changed.\n\nChanges will be applied.");
-            // } else {
-            //    alert("bindings Settings change\n__________________________________\n\nSome error occured! Checking data from gateway are not as excpeted after sending to save.\n\nPlease try again!");
-            // }
-
-            hide('#updatePowerLimit');
             return;
         }
 
@@ -1242,7 +1114,7 @@ const char INDEX_HTML[] PROGMEM = R"=====(
                     //elem.style.fontSize = "9vmin";
                     //console.log("event change in value for " + elem.id + " new innerHtml: " + elem.innerHTML);
                     setTimeout(function () {
-                        elem.style.color = "#2196f3";
+                        elem.style.color = "";
                         //elem.style.fontSize = "6.5vmin";
                         // console.log("timeout --- event change in value for " + elem.id + " new innerHtml: " + elem.innerHTML);
                     }, 4000);
@@ -1325,6 +1197,7 @@ const char INDEX_HTML[] PROGMEM = R"=====(
         function getDataValues() {
             $.ajax({
                 url: 'api/data.json',
+                //url: 'http://192.168.1.122/api/data.json',
 
                 type: 'GET',
                 contentType: false,

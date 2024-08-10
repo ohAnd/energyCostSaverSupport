@@ -1,9 +1,10 @@
 const char STYLE_CSS[] PROGMEM = R"=====(
 
 :root {
-    --primary-color: #2196f3;
+    --primary-color: #f2b63f;
     --background-color: #000b5e;
     --background-in-color: #00233a;
+    --frame-color: #ffe95c;
     --header-background-color: #1c1c1c;
     --font-size-small: 2vmin;
     --font-size-large: 5vmin;
@@ -88,7 +89,7 @@ hr {
 
     border-radius: 10px;
     border-width: 1px;
-    border-color: var(--primary-color);
+    border-color: var(--frame-color);
     border-style: solid;
 
     font-size: 3vmin;
@@ -112,7 +113,7 @@ hr {
 .panelValueButton {
     font-size: 3vmin;
 	border-width: 1px;
-    border-color: var(--primary-color);
+    border-color: var(--frame-color);
     border-style: solid;
     border-radius: 5px;
     padding-left: 2%;
@@ -127,7 +128,7 @@ hr {
 .panelValueBoxDetail {
     float: left;
     width: 50%;
-    color: rgb(0, 89, 255);
+    color: var(--primary-color);
     font-size: 2.5vmin;
     /* border-width: 1px;
     border-color: #21f333;
@@ -331,9 +332,9 @@ hr {
 }
 
 .popupHeader>.popupHeaderTabs>.selected {
-    border-left: 1px solid var(--primary-color);
-    border-top: 1px solid var(--primary-color);
-    border-right: 1px solid var(--primary-color);
+    border-left: 1px solid var(--frame-color);
+    border-top: 1px solid var(--frame-color);
+    border-right: 1px solid var(--frame-color);
     border-bottom: 0px;
 }
 
@@ -376,7 +377,7 @@ hr {
     right: 0;
     background: #FFF;
     border-width: 1px;
-    border-color: var(--primary-color);
+    border-color: var(--frame-color);
     border-style: solid;
     border-radius: 10px;
     z-index: -1;
@@ -401,7 +402,7 @@ hr {
     max-height: 20%;
     overflow-x: hidden;
     overflow-y: auto;
-    background-color: rgb(238, 237, 237);
+    background-color: white;
     padding: 5px;
     border-radius: 4px;
     scrollbar-width: thin;
@@ -419,7 +420,7 @@ input {
 }
 
 input {
-    background: #f1f1f1;
+    background: lightgrey;
     border: 0;
     padding: 0 15px
 }
@@ -452,7 +453,7 @@ input[type=file] {
 
 #file-input {
     padding: 0;
-    border: 1px solid #ddd;
+    border: 1px solid var(--frame-color);
     line-height: 44px;
     text-align: left;
     display: block;
@@ -461,27 +462,18 @@ input[type=file] {
 
 #remainBar,
 #prgbar {
-    background-color: #222222;
+    background-color: var(--frame-color);
     border-radius: 10px
 }
 
 #remainBar {
-    background-color: #3498db;
+    background-color: var(--background-color);
     width: 0%;
     height: 10px
 }
 
-/* form {
-    background: #fff;
-    max-width: 100%;
-    margin: 50px auto;
-    padding: 30px;
-    border-radius: 5px;
-    text-align: center
-} */
-
 .btn {
-    background: #3498db;
+    background: var(--primary-color);
     color: #fff;
     padding: 5px;
     cursor: pointer;
@@ -552,51 +544,6 @@ input:checked + .slider:before {
     transform: translateX(26px);
 }
 
-/* .switch {
-    position: relative;
-    display: inline-block;
-    width: 30px;
-    height: 17px
-}
-
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0
-} */
-
-/* .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    -webkit-transition: .4s;
-    transition: .4s
-}
-
-.slider:before {
-    position: absolute;
-    content: '';
-    height: 13px;
-    width: 13px;
-    left: 2px;
-    bottom: 2px;
-    background-color: #fff;
-    -webkit-transition: .4s;
-    transition: .4s
-}
-
-.slider.round {
-    border-radius: 17px
-}
-
-.slider.round:before {
-    border-radius: 50%
-} */
-
 #debug,
 #tempOut,
 #apiOut {
@@ -610,7 +557,7 @@ input:checked + .slider:before {
 
 #firmware,
 #builddate {
-    color: lightblue;
+    color: var(--primary-color);
     font-size: 2vmin;
     font-style: italic;
 }
@@ -744,11 +691,11 @@ input:checked + .slider:before {
 .ui-progressbar-value {
     transition: width 0.25s;
     -webkit-transition: width 0.5s;
-    background: #3498db;
+    background: var(--frame-color);
 }
 
 .updateChannel {
-    border: 1px solid #3498db;
+    border: 1px solid var(--frame-color);
     text-align: center;
     cursor: pointer;
     width: 50%;
@@ -763,7 +710,7 @@ input:checked + .slider:before {
     display: inline-block;
     width: 20px;
     height: 20px;
-    border: 2px solid #3498db;
+    border: 2px solid var(--frame-color);
     border-top: 2px solid transparent;
     border-radius: 50%;
     margin-left: 5px;
@@ -814,7 +761,7 @@ input:checked + .slider:before {
     font-size: 0.7em;
     color: var(--primary-color);
     position: absolute;
-    bottom: -20px;
+    bottom: -5%;
 }
 
 .bar-container:nth-child(1) .bar-time,

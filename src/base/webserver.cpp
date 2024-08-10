@@ -225,6 +225,7 @@ void ESPwebserver::handleDataJson(AsyncWebServerRequest *request)
     JSON = JSON + "\"localtime\": " + String(platformData.currentTimestamp) + ",";
     JSON = JSON + "\"ntpStamp\": " + String(platformData.currentNTPtime - userConfig.timezoneOffest) + ",";
     JSON = JSON + "\"starttime\": " + String(platformData.espStarttime - userConfig.timezoneOffest) + ",";
+    JSON = JSON + "\"lastResponse\": " + String(platformData.lastCostDataUpdate) + ",";
     JSON = JSON + "\"energyCosts\": [";
     // rund through platformData.pricePerKWh and add to JSON
     for (size_t i = 0; i < 24; i++)
@@ -234,12 +235,21 @@ void ESPwebserver::handleDataJson(AsyncWebServerRequest *request)
             JSON += ",";
         }
     JSON = JSON + "],";
+
+    JSON = JSON + "\"device\": {",
+    JSON = JSON + "\"deviceName\": \"" + String(platformData.deviceName) + "\",";
+    JSON = JSON + "\"maxWaitTime\": " + String(platformData.maxWaitTime) + ",";
+    JSON = JSON + "\"tgtDurationInHours\": " + String(platformData.tgtDurationInHours);    
+    JSON = JSON + "},",
+
+    JSON = JSON + "\"result\": {",
     JSON = JSON + "\"currentHour\": " + String(platformData.currentHour) + ",";
-    JSON = JSON + "\"minStartHour\": " + String(platformData.minStartHour) + ",";
+    JSON = JSON + "\"tgtStartHour\": " + String(platformData.tgtStartHour) + ",";
     JSON = JSON + "\"tgtDelayHours\": " + String(platformData.tgtDelayHours) + ",";
-    JSON = JSON + "\"tgtDurationInHours\": " + String(platformData.tgtDurationInHours) + ",";
-    JSON = JSON + "\"energyCostNow\": " + String(platformData.priceSumNow) + ",";
-    JSON = JSON + "\"energyCostSave\": " + String(platformData.priceSumSave);
+    JSON = JSON + "\"energyCostNow\": " + String(platformData.energyCostNow) + ",";
+    JSON = JSON + "\"energyCostSave\": " + String(platformData.energyCostSave);
+    JSON = JSON + "}",
+
     JSON = JSON + "}";
 
     request->send(200, "application/json; charset=utf-8", JSON);

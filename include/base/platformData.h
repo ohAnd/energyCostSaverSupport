@@ -33,12 +33,19 @@ struct baseDataStruct
   unsigned long lastCostDataUpdate = 4000000001;
 
   float pricePerKWh[24] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  
+  // device
+  String deviceName = "washing machine";
+  uint8_t maxWaitTime = 12;
   uint8_t tgtDurationInHours = 3;
-  uint8_t tgtDelayHours = 0;
-  float priceSumNow = 0;
-  float priceSumSave = 0;
+  // result
   uint8_t currentHour = 0;
-  uint8_t minStartHour = 0;
+  uint8_t tgtStartHour = 0;
+  uint8_t tgtDelayHours = 0;
+  float energyCostNow = 0;
+  float energyCostSave = 0;
+  
+
 };
 #endif
 

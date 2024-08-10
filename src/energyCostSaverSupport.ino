@@ -113,7 +113,7 @@ ESP32Timer ITimer(0);
 
 // user config
 uint8_t tgtConsupmtionFactor = 1.2; // average consumption per hour e.g. washing machine needs 3.6 kWh in 3 hours -> factor = 1.2
-uint8_t maxDelayHours = 12;
+
 
 boolean checkWifiTask()
 {
@@ -490,13 +490,13 @@ void calculateCurrentCost()
   float pricePerKWhNow = platformData.pricePerKWh[0];
   Serial.println("calculateCurrentCost\t     price per kWh now: " + String(pricePerKWhNow, 4) + " €/kWh");
 
-  platformData.priceSumNow = 0;
+  platformData.energyCostNow = 0;
   for (uint8_t i = 0; i < platformData.tgtDurationInHours; i++)
   {
-    platformData.priceSumNow = platformData.priceSumNow + platformData.pricePerKWh[i];
+    platformData.energyCostNow = platformData.energyCostNow + platformData.pricePerKWh[i];
   }
-  platformData.priceSumNow = tgtConsupmtionFactor * platformData.priceSumNow;
-  Serial.println("calculateCurrentCost\tsum price for duration: " + String(platformData.priceSumNow, 4) + " €/kWh");
+  platformData.energyCostNow = tgtConsupmtionFactor * platformData.energyCostNow;
+  Serial.println("calculateCurrentCost\tsum price for duration: " + String(platformData.energyCostNow, 4) + " €/kWh");
 }
 
 void calculateBestCost()
@@ -507,11 +507,11 @@ void calculateBestCost()
 
   Serial.println("TEST --- currentHour: " + String(platformData.currentHour) + " h --- tgtDurationInHours: " + String(platformData.tgtDurationInHours) + " h");
 
-  if (maxDelayHours > 23)
-    maxDelayHours = 23;
+  if (platformData.maxWaitTime > 23)
+    platformData.maxWaitTime = 23;
 
   // Iterate through the array to find the phase with the lowest total cost
-  for (uint8_t i = 0; i <= maxDelayHours; i++)
+  for (uint8_t i = 0; i <= (platformData.maxWaitTime - platformData.tgtDurationInHours); i++)
   {
     float totalCost = 0;
     for (uint8_t j = 0; j < platformData.tgtDurationInHours; j++)
@@ -521,7 +521,7 @@ void calculateBestCost()
     if (totalCost < minCost)
     {
       minCost = totalCost;
-      platformData.minStartHour = i;
+      platformData.tgtStartHour = i;
     }
 
     // debug
@@ -532,23 +532,23 @@ void calculateBestCost()
     // Serial.println("TEST (" + String(i) + ")\ttotalCost: " + String(totalCost, 4) + " € --- hour: " + String(startHour) + " h" + " -\t cost at hour: " + String(platformData.pricePerKWh[i], 5) + " €/kWh");
   }
   // get the lowest cost for the whole duration
-  platformData.priceSumSave = tgtConsupmtionFactor * minCost;
+  platformData.energyCostSave = tgtConsupmtionFactor * minCost;
 
-  platformData.minStartHour = platformData.minStartHour + platformData.currentHour;
-  if (platformData.minStartHour > 24)
+  platformData.tgtStartHour = platformData.tgtStartHour + platformData.currentHour;
+  if (platformData.tgtStartHour > 24)
   {
-    platformData.minStartHour = platformData.minStartHour - 24;
+    platformData.tgtStartHour = platformData.tgtStartHour - 24;
   }
-  Serial.println("TEST --- minCost: " + String(minCost, 4) + " € --- minStartHour: " + String(platformData.minStartHour) + " h");
+  Serial.println("TEST --- minCost: " + String(minCost, 4) + " € --- tgtStartHour: " + String(platformData.tgtStartHour) + " h");
 
-  if (platformData.minStartHour < platformData.currentHour)
+  if (platformData.tgtStartHour < platformData.currentHour)
   {
-    platformData.tgtDelayHours = 24 - platformData.currentHour + platformData.minStartHour;
+    platformData.tgtDelayHours = 24 - platformData.currentHour + platformData.tgtStartHour;
   }
   else
-    platformData.tgtDelayHours = platformData.minStartHour - platformData.currentHour;
+    platformData.tgtDelayHours = platformData.tgtStartHour - platformData.currentHour;
 
-  Serial.println("TEST --- price sum now: " + String(platformData.priceSumNow, 4) + " € --- price sum save: " + String(platformData.priceSumSave, 4) + " €");
+  Serial.println("TEST --- price sum now: " + String(platformData.energyCostNow, 4) + " € --- price sum save: " + String(platformData.energyCostSave, 4) + " €");
 }
 
 float getCostForEpexPrice(float rawPricePerKWH)
@@ -973,8 +973,8 @@ void loop()
     {
       // display tasks every 50ms = 20Hz
       if (userConfig.displayConnected == 0)
-        // displayOLED.renderScreen(getTimeStringByTimestamp(timeClient.getEpochTime() - 3600), String("FW: " + platformData.fwVersion), platformData.tgtDelayHours, platformData.pricePerKWhNow, platformData.priceSumSave);
-        displayOLED.renderScreen(getTimeStringByTimestamp(timeClient.getEpochTime() - 3600), "Stand: " + getTimeStringByTimestamp(platformData.lastCostDataUpdate, true), platformData.tgtDelayHours, platformData.priceSumNow, platformData.priceSumSave);
+        // displayOLED.renderScreen(getTimeStringByTimestamp(timeClient.getEpochTime() - 3600), String("FW: " + platformData.fwVersion), platformData.tgtDelayHours, platformData.pricePerKWhNow, platformData.energyCostSave);
+        displayOLED.renderScreen(getTimeStringByTimestamp(timeClient.getEpochTime() - 3600), "Stand: " + getTimeStringByTimestamp(platformData.lastCostDataUpdate, true), platformData.tgtDelayHours, platformData.energyCostNow, platformData.energyCostSave);
       else if (userConfig.displayConnected == 1)
         displayTFT.renderScreen(timeClient.getFormattedTime(), String(platformData.fwVersion));
     }
