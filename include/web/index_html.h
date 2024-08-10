@@ -308,7 +308,6 @@ const char INDEX_HTML[] PROGMEM = R"=====(
     <script>
         let timerRemainingProgess = 0;
         let waitTime = 60000 * 15;
-        let remainingTime = waitTime;
 
         let timerInfoUpdate = 0;
         let cacheInfoData = {};
@@ -324,6 +323,7 @@ const char INDEX_HTML[] PROGMEM = R"=====(
 
             window.setInterval(function () {
                 getDataValues();
+                remainingResponse();
             }, 1000);
 
             timerInfoUpdate = window.setInterval(function () {
@@ -335,9 +335,9 @@ const char INDEX_HTML[] PROGMEM = R"=====(
                 requestVersionData();
             }, 300000);
 
-            timerRemainingProgess = window.setInterval(function () {
-                remainingResponse();
-            }, 100);
+            // timerRemainingProgess = window.setInterval(function () {
+            //     remainingResponse();
+            // }, 100);
         });
 
         // switching in popups between tabs
@@ -402,16 +402,14 @@ const char INDEX_HTML[] PROGMEM = R"=====(
         }
 
         function remainingResponse() {
-            if (remainingTime > 0) {
-                var remainingTime_width = (remainingTime / waitTime) * 100;
-                if (remainingTime_width > 100)
-                    remainingTime_width = 100;
-                $('#updateTime').width(remainingTime_width + "%");
-            }
-            remainingTime = remainingTime - 100;
-            if (remainingTime < 0) {
-                remainingTime = -0.1;
-            }
+            var lastUpdate = cacheData.lastResponse * 1000;
+            var currentTime = new Date().getTime();
+            var diff = currentTime - lastUpdate;
+            
+            var remainingTime_width = (diff / waitTime) * 100;
+            if (remainingTime_width > 100)
+                remainingTime_width = 100;
+            $('#updateTime').width(remainingTime_width + "%");
         }
 
         function refreshData(data) {
@@ -426,18 +424,14 @@ const char INDEX_HTML[] PROGMEM = R"=====(
             $('#gwtime').html(getTime(data.ntpStamp));
             $('#gwtime2').html(getTime(data.ntpStamp, "date"));
 
-
-            if ($('#last_response').html() != getTime(data.lastResponse)) {
-                remainingTime = waitTime;
-            }
-            $('#last_response').html(getTime(data.lastResponse));
+            $('#last_response').html(getTime(data.lastResponse - 3600));
 
             $('#gwtime_small').html(getTime(data.localtime));
             $('#gwNTPtime').html(getTime(data.ntpStamp));
 
             $('#gwStartTime').html(getTime(data.starttime, "dateShort") + "&nbsp;" + getTime(data.starttime, "timeShort"));
 
-            $('#uptime').html(getTime(data.lastResponse));
+            $('#uptime').html(getTime(data.lastResponse - 3600));
 
             return true;
         }
@@ -453,9 +447,6 @@ const char INDEX_HTML[] PROGMEM = R"=====(
 
             if (data.firmware.selectedUpdateChannel == 0) { $("#relChanStable").addClass("selected"); $("#relChanSnapshot").removeClass("selected"); }
             else { $("#relChanStable").removeClass("selected"); $("#relChanSnapshot").addClass("selected"); }
-
-            // setting timer value according to user setting
-            waitTime = 60; //data.dtuConnection.dtuDataCycle * 1000;
 
             return true;
         }

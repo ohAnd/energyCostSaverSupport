@@ -698,6 +698,9 @@ void startServices()
 
     espWebServer.start();
 
+    // wait for timeClient
+    delay(1);
+
     // first run
     calculateCost();
   }
