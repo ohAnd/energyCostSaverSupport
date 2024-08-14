@@ -20,6 +20,16 @@ struct UserConfig
     boolean wifiAPstart           = true;
     int selectedUpdateChannel     = 0; // 0 - release 1 - snapshot
     int timezoneOffest            = 7200; // default CEST
+
+    // energyCostSettings
+    float fixedTaxPricePerKWh = 0.0205 + 0.0157; // = 0.0362
+    float fixedPricePerKWh = 0.13135;
+    float taxVarPricePerKWH = 16;
+
+    // deviceConfig
+    String deviceName = "washing machine";
+    uint8_t maxWaitTime = 12;
+    uint8_t tgtDurationInHours = 3;
 };
 
 extern UserConfig userConfig;

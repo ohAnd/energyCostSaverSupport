@@ -86,7 +86,7 @@ const char INDEX_HTML[] PROGMEM = R"=====(
             </div>
             <hr>
             <div style="text-align: center;">
-                <b onclick="changeDtuData()" id="btnSaveDtuSettings" class="form-button btn">save</b>
+                <b onclick="changeDeviceData()" id="btnSaveDtuSettings" class="form-button btn">save</b>
                 <b onclick="hide('#changeSettings')" id="btnSettingsClose" class="form-button btn">close</b>
             </div>
         </div>
@@ -101,28 +101,28 @@ const char INDEX_HTML[] PROGMEM = R"=====(
             </div>
             <hr>
             <div>
-                fix costs per kWh in &euro; without tax free:
+                fix costs per kWh in &euro; without additonal tax/ fee:
             </div>
             <div>
-                <input type="number" id="energyFixCostsPerKwhTaxFree" placeholder="0.0000">
+                <input type="number" id="fixedPricePerKWh" placeholder="0.0000">
             </div>
             <hr>
             <div>
                 fix costs per kWh in &euro; non tax free:
             </div>
             <div>
-                <input type="number" id="energyFixCostsPerKwhTax" min="0" max="10" placeholder="0.01">
+                <input type="number" id="fixedTaxPricePerKWh" min="0" max="10" placeholder="0.01">
             </div>
             <hr>
             <div>
                 tax rate in % (e.g. 16%):
             </div>
             <div>
-                <input type="number" id="energyTaxRate" min="0" max="100" placeholder="0">
+                <input type="number" id="taxVarPricePerKWH" min="0" max="100" placeholder="0">
             </div>
             <hr>
             <div style="text-align: center;">
-                <b onclick="changeDtuData()" id="btnSaveDtuSettings" class="form-button btn">save</b>
+                <b onclick="changeEnergyCostsData()" id="btnSaveDtuSettings" class="form-button btn">save</b>
                 <b onclick="hide('#changeSettings')" id="btnSettingsClose" class="form-button btn">close</b>
             </div>
         </div>
@@ -202,7 +202,7 @@ const char INDEX_HTML[] PROGMEM = R"=====(
             </p>
             <p id="remainingTime">remaining time: <span id="updateTimeout"></span></p>
         </div>
-        <div style="border-color: #3498db; border-style: solid;border-radius: 5px;border-width: 1px;">
+        <div class="updateProgressBarFrame">
             <div id="progressbar" class="ui-progressbar-value" style="width:0%;">&nbsp;</div>
         </div>
         <b>
@@ -260,18 +260,14 @@ const char INDEX_HTML[] PROGMEM = R"=====(
                         <b id="last_response" class="panelValueSmall">00:00:00</b>
                     </div>
                     <div class="panelValueBoxDetail">
-                        <small class="panelHead">gw local</small><br>
-                        <b id="gwtime_small" class="panelValueSmall">00:00:00</b>
-                    </div>
-
-                    <div class="panelValueBoxDetail">
-                        <small class="panelHead">gw start</small><br>
-                        <b id="gwStartTime" class="panelValueSmall">00:00:00</b>
-                    </div>
-                    <div class="panelValueBoxDetail">
-                        <small class="panelHead">gw ntp</small><br>
+                        <small class="panelHead">system ntp</small><br>
                         <b id="gwNTPtime" class="panelValueSmall">00:00:00</b>
                     </div>
+                    <div class="panelValueBoxDetail">
+                        <small class="panelHead">system start</small><br>
+                        <b id="gwStartTime" class="panelValueSmall">00:00:00</b>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -402,13 +398,16 @@ const char INDEX_HTML[] PROGMEM = R"=====(
         }
 
         function remainingResponse() {
-            var lastUpdate = cacheData.lastResponse * 1000;
+
+            var lastUpdate = (cacheData.lastResponse) * 1000;
             var currentTime = new Date().getTime();
             var diff = currentTime - lastUpdate;
-            
-            var remainingTime_width = (diff / waitTime) * 100;
+
+            var remainingTime_width = 100 - (diff / waitTime) * 100;
             if (remainingTime_width > 100)
                 remainingTime_width = 100;
+            else if (remainingTime_width < 0)
+                remainingTime_width = 0;
             $('#updateTime').width(remainingTime_width + "%");
         }
 
@@ -424,14 +423,13 @@ const char INDEX_HTML[] PROGMEM = R"=====(
             $('#gwtime').html(getTime(data.ntpStamp));
             $('#gwtime2').html(getTime(data.ntpStamp, "date"));
 
-            $('#last_response').html(getTime(data.lastResponse - 3600));
+            $('#last_response').html(getTime(data.lastResponse));
 
-            $('#gwtime_small').html(getTime(data.localtime));
             $('#gwNTPtime').html(getTime(data.ntpStamp));
 
             $('#gwStartTime').html(getTime(data.starttime, "dateShort") + "&nbsp;" + getTime(data.starttime, "timeShort"));
 
-            $('#uptime').html(getTime(data.lastResponse - 3600));
+            $('#uptime').html(getTime(data.lastResponse));
 
             return true;
         }
@@ -516,6 +514,7 @@ const char INDEX_HTML[] PROGMEM = R"=====(
             var currentHour = data.result.currentHour;
             var currentHourBar = currentHour;
             var tgtStartHour = data.result.tgtStartHour;
+            var lastValidHour = data.energyCostsLastEntry;
             var duration = data.device.tgtDurationInHours;
             var barDiagram = document.getElementsByClassName("bar-diagram")[0];
 
@@ -526,19 +525,25 @@ const char INDEX_HTML[] PROGMEM = R"=====(
 
             // iterate over all data to find the highest value
             var maxValue = Number.MIN_VALUE;
+            var minValue = Number.MAX_VALUE;
             for (var i = 0; i < jsonData.length; i++) {
                 var entry = jsonData[i];
                 var value = entry.value;
                 if (value > maxValue) {
                     maxValue = value;
                 }
+                if (value < minValue) {
+                    minValue = value;
+                }
             }
+            minValue = minValue - 0.01;
+            
 
             // calculate the height percentage for each bar based on the highest value
             for (var i = 0; i < jsonData.length; i++) {
                 var entry = jsonData[i];
                 var value = entry.value;
-                var heightPercentage = (value / maxValue) * 100;
+                var heightPercentage = (((value) - minValue) / (maxValue  - minValue)) * 100;
                 // console.log("(" + i + ")value: " + value + " %: " + heightPercentage);
 
                 // create the bar container
@@ -556,9 +561,14 @@ const char INDEX_HTML[] PROGMEM = R"=====(
                 bar.style.height = heightPercentage + "%";
 
                 // set the color of the bar based where program should run
-
                 if ((currentHour % 24) >= tgtStartHour && (currentHour % 24) < (tgtStartHour + duration)) {
                     bar.style.backgroundColor = "green";
+                }else if (value > maxValue * 0.9) {
+                    bar.style.backgroundColor = "darkred";
+                }
+                 else if (i > lastValidHour) {
+                    bar.style.backgroundColor = "darkgrey";
+                    barValue.innerHTML = "?";
                 }
 
                 // create the bar time element
@@ -578,19 +588,17 @@ const char INDEX_HTML[] PROGMEM = R"=====(
 
         function getEnergyData() {
             $('#btnSaveDtuSettings').css('opacity', '1.0');
-            $('#btnSaveDtuSettings').attr('onclick', "changeDtuData();")
+            $('#btnSaveDtuSettings').attr('onclick', "changeEnergyCostsData();")
 
-            // get networkdata
-            // $('#energyFixCostsPerKwhTaxFree').val(data.energyFixCostsPerKwhTaxFree);
-            // $('#energyFixCostsPerKwhTax').val(data.energyFixCostsPerKwhTax);
-            // $('#energyTaxRate').val(data.energyTaxRate);
-
+            $('#fixedPricePerKWh').val(cacheData.energyCostSettings.fixedPricePerKWh);
+            $('#fixedTaxPricePerKWh').val(cacheData.energyCostSettings.fixedTaxPricePerKWh);
+            $('#taxVarPricePerKWH').val(cacheData.energyCostSettings.taxVarPricePerKWH);
         }
 
         function getDeviceData() {
             // active
             $('#btnSaveDtuSettings').css('opacity', '1.0');
-            $('#btnSaveDtuSettings').attr('onclick', "changeDtuData();")
+            $('#btnSaveDtuSettings').attr('onclick', "changeDeviceData();")
 
             $('#deviceName').val(cacheData.device.deviceName);
             $('#deviceRuntime').val(cacheData.device.tgtDurationInHours);
@@ -664,26 +672,17 @@ const char INDEX_HTML[] PROGMEM = R"=====(
             return;
         }
 
-        function changeDtuData() {
-            var dtuHostIpDomainSend = $('#dtuHostIpDomain').val();
-            var dtuDataCycleSend = $('#dtuDataCycle').val();
-            if ($("#dtuCloudPause").is(':checked')) {
-                dtuCloudPauseSend = 1;
-            } else {
-                dtuCloudPauseSend = 0;
-            }
-
-            var dtuSsidSend = $('#dtuSsid').val();
-            var dtuPasswordSend = $('#dtuPassword').val();
+        function changeEnergyCostsData() {
+            var fixedPricePerKWhSend = $('#fixedPricePerKWh').val();
+            var fixedTaxPricePerKWhSend = $('#fixedTaxPricePerKWh').val();
+            var taxVarPricePerKWHSend = $('#taxVarPricePerKWH').val();
 
             var data = {};
-            data["dtuHostIpDomainSend"] = dtuHostIpDomainSend;
-            data["dtuDataCycleSend"] = dtuDataCycleSend;
-            data["dtuCloudPauseSend"] = dtuCloudPauseSend;
-            data["dtuSsidSend"] = dtuSsidSend;
-            data["dtuPasswordSend"] = dtuPasswordSend;
+            data["fixedPricePerKWhSend"] = fixedPricePerKWhSend;
+            data["fixedTaxPricePerKWhSend"] = fixedTaxPricePerKWhSend;
+            data["taxVarPricePerKWHSend"] = taxVarPricePerKWHSend;
 
-            console.log("send to server: dtuHostIpDomain: " + dtuHostIpDomainSend + " dtuDataCycle: " + dtuDataCycleSend + " dtuCloudPause: " + dtuCloudPauseSend + " - dtuSsid: " + dtuSsidSend + " - pass: " + dtuPasswordSend);
+            console.log("send to server: fixedPricePerKWhSend: " + fixedPricePerKWhSend + " fixedTaxPricePerKWhSend: " + fixedTaxPricePerKWhSend + " taxVarPricePerKWHSend: " + taxVarPricePerKWHSend);
 
             const urlEncodedDataPairs = [];
 
@@ -701,7 +700,7 @@ const char INDEX_HTML[] PROGMEM = R"=====(
 
 
             var xmlHttp = new XMLHttpRequest();
-            xmlHttp.open("POST", "/updateDtuSettings", false); // false for synchronous request
+            xmlHttp.open("POST", "/updateErnergyCostSettings", false); // false for synchronous request
             xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
             // Finally, send our data.
@@ -709,15 +708,15 @@ const char INDEX_HTML[] PROGMEM = R"=====(
 
             strResult = JSON.parse(xmlHttp.responseText);
             console.log("got from server: " + strResult);
-            console.log("got from server - strResult.dtuHostIpDomain: " + strResult.dtuHostIpDomain + " - cmp with: " + dtuHostIpDomainSend);
-            console.log("got from server - strResult.dtuSsid: " + strResult.dtuSsid + " - cmp with: " + dtuSsidSend);
-            console.log("got from server - strResult.dtuPassword: " + strResult.dtuHostIpDomain + " - cmp with: " + dtuPasswordSend);
+            console.log("got from server - strResult.fixedPricePerKWh: " + strResult.fixedPricePerKWh + " - cmp with: " + fixedPricePerKWhSend);
+            console.log("got from server - strResult.fixedTaxPricePerKWh: " + strResult.fixedTaxPricePerKWh + " - cmp with: " + fixedTaxPricePerKWhSend);
+            console.log("got from server - strResult.taxVarPricePerKWH: " + strResult.taxVarPricePerKWH + " - cmp with: " + taxVarPricePerKWHSend);
 
-            if (strResult.dtuHostIpDomain == dtuHostIpDomainSend && strResult.dtuSsid == dtuSsidSend && strResult.dtuPassword == dtuPasswordSend) {
+            if (strResult.fixedPricePerKWh == fixedPricePerKWhSend && strResult.fixedTaxPricePerKWh == fixedTaxPricePerKWhSend && strResult.taxVarPricePerKWH == taxVarPricePerKWHSend) {
                 console.log("check saved data - OK");
-                showAlert('dtu connection settings changed', 'The new settings will be applied.', 'alert-success');
+                showAlert('Energy Costs Data settings changed', 'The new settings will be applied.', 'alert-success');
             } else {
-                showAlert('Some error occured!', 'change dtu connection settings could not be saved. Please try again!', 'alert-danger');
+                showAlert('Some error occured!', 'change Energy Costs Data settings could not be saved. Please try again!', 'alert-danger');
             }
 
             //$('#btnSaveDtuSettings').css('opacity', '0.3');
@@ -727,60 +726,17 @@ const char INDEX_HTML[] PROGMEM = R"=====(
             return;
         }
 
-        function changeBindingsData() {
-            var openhabHostIpDomainSend = $('#openhabIP').val();
-            var openhabPrefixSend = $('#ohItemPrefix').val();
-            if ($("#openhabActive").is(':checked')) {
-                openhabActiveSend = 1;
-            } else {
-                openhabActiveSend = 0;
-            }
-
-            var mqttIpPortString = $('#mqttIP').val().split(":");
-
-            var mqttIpSend = mqttIpPortString[0];
-            var mqttPortSend = "1883";
-            if (mqttIpPortString[1] != undefined && !isNaN(mqttIpPortString[1])) {
-                mqttPortSend = mqttIpPortString[1];
-            }
-            var mqttUseTLSSend = 0;
-            var mqttUserSend = $('#mqttUser').val();
-            var mqttPassSend = $('#mqttPassword').val();
-            var mqttMainTopicSend = $('#mqttMainTopic').val();
-            var mqttHAautoDiscoveryONSend = 0;
-
-            if ($("#mqttActive").is(':checked')) {
-                mqttActiveSend = 1;
-            } else {
-                mqttActiveSend = 0;
-            }
-            if ($("#mqttUseTLS").is(':checked')) {
-                mqttUseTLSSend = 1;
-            } else {
-                mqttUseTLSSend = 0;
-            }
-            if ($("#mqttHAautoDiscoveryON").is(':checked')) {
-                mqttHAautoDiscoveryONSend = 1;
-            } else {
-                mqttHAautoDiscoveryONSend = 0;
-            }
+        function changeDeviceData() {
+            var deviceNameSend = $('#deviceName').val();
+            var deviceRuntimeSend = $('#deviceRuntime').val();
+            var deviceMaxWaittimeSend = $('#deviceMaxWaittime').val();
 
             var data = {};
-            data["openhabHostIpDomainSend"] = openhabHostIpDomainSend;
-            data["openhabPrefixSend"] = openhabPrefixSend;
-            data["openhabActiveSend"] = openhabActiveSend;
+            data["deviceNameSend"] = deviceNameSend;
+            data["deviceRuntimeSend"] = deviceRuntimeSend;
+            data["deviceMaxWaittimeSend"] = deviceMaxWaittimeSend;
 
-            data["mqttIpSend"] = mqttIpSend;
-            data["mqttPortSend"] = mqttPortSend;
-            data["mqttUserSend"] = mqttUserSend;
-            data["mqttPassSend"] = mqttPassSend;
-            data["mqttMainTopicSend"] = mqttMainTopicSend;
-            data["mqttActiveSend"] = mqttActiveSend;
-            data["mqttUseTLSSend"] = mqttUseTLSSend;
-            data["mqttHAautoDiscoveryONSend"] = mqttHAautoDiscoveryONSend;
-
-
-            console.log("send to server: openhabHostIpDomainSend: " + openhabHostIpDomainSend);
+            console.log("send to server: deviceNameSend: " + deviceNameSend);
 
             const urlEncodedDataPairs = [];
 
@@ -798,7 +754,7 @@ const char INDEX_HTML[] PROGMEM = R"=====(
 
 
             var xmlHttp = new XMLHttpRequest();
-            xmlHttp.open("POST", "/updateBindingsSettings", false); // false for synchronous request
+            xmlHttp.open("POST", "/updateDeviceDataSettings", false); // false for synchronous request
             xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
             // Finally, send our data.
@@ -806,13 +762,15 @@ const char INDEX_HTML[] PROGMEM = R"=====(
 
             strResult = JSON.parse(xmlHttp.responseText);
             console.log("got from server: " + strResult);
-            console.log("got from server - strResult.dtuHostIpDomain: " + strResult.openhabHostIpDomain + " - cmp with: " + openhabHostIpDomainSend);
+            console.log("got from server - strResult.deviceName: " + strResult.deviceName + " - cmp with: " + deviceNameSend);
+            console.log("got from server - strResult.deviceRuntime: " + strResult.deviceRuntime + " - cmp with: " + deviceRuntimeSend);
+            console.log("got from server - strResult.deviceMaxWaittime: " + strResult.deviceMaxWaittime + " - cmp with: " + deviceMaxWaittimeSend);
 
-            if (strResult.openhabHostIpDomain == openhabHostIpDomainSend && strResult.mqttBrokerIpDomain == mqttIpSend && strResult.mqttBrokerUser == mqttUserSend) {
+            if (strResult.deviceName == deviceNameSend && strResult.deviceRuntime == deviceRuntimeSend && strResult.deviceMaxWaittime == deviceMaxWaittimeSend) {
                 console.log("check saved data - OK");
-                showAlert('change bindings settings', 'Your settings were successfully saved and will be applied.', 'alert-success');
+                showAlert('change DeviceData settings', 'Your settings were successfully saved and will be applied.', 'alert-success');
             } else {
-                showAlert('Some error occured!', 'change bindings settings could not be saved. Please try again!', 'alert-danger');
+                showAlert('Some error occured!', 'change DeviceData settings could not be saved. Please try again!', 'alert-danger');
             }
 
             hide('#changeSettings');

@@ -4,6 +4,8 @@ const char STYLE_CSS[] PROGMEM = R"=====(
     --primary-color: #f2b63f;
     --background-color: #000b5e;
     --background-in-color: #00233a;
+    --background-popup: #474444;
+    --background-inputs: lightgrey;
     --frame-color: #ffe95c;
     --header-background-color: #1c1c1c;
     --font-size-small: 2vmin;
@@ -107,7 +109,7 @@ hr {
 }
 
 .panelValueSmall {
-    font-size: 3vmin;
+    font-size: 4vmin;
 }
 
 .panelValueButton {
@@ -129,7 +131,7 @@ hr {
     float: left;
     width: 50%;
     color: var(--primary-color);
-    font-size: 2.5vmin;
+    font-size: 3vmin;
     /* border-width: 1px;
     border-color: #21f333;
     border-style: solid; */
@@ -263,7 +265,7 @@ hr {
     left: 10%;
     height: 80%;
     top: 10%;
-    background: #FFF;
+    background: var(--background-popup);
     border-width: 1px;
     border-color: var(--primary-color);
     border-style: solid;
@@ -284,7 +286,7 @@ hr {
     /* border-bottom: 1px solid; */
     /* border: 1px solid #e73701; */
     /* background-color: var(--primary-color); */
-    color: #474444;
+    color: var(--primary-color);
     z-index: 21;
 }
 
@@ -323,7 +325,7 @@ hr {
 
     cursor: pointer;
 
-    font-size: 3.5vmin;
+    font-size: 3.0vmin;
 }
 
 .selected {
@@ -402,7 +404,8 @@ hr {
     max-height: 20%;
     overflow-x: hidden;
     overflow-y: auto;
-    background-color: white;
+    background-color: var(--background-inputs);
+    color: black;
     padding: 5px;
     border-radius: 4px;
     scrollbar-width: thin;
@@ -688,6 +691,15 @@ input:checked + .slider:before {
 }
 
 /* update progress */
+.updateProgressBarFrame {
+    border-color: var(--frame-color);
+    border-style: solid;
+    border-radius: 5px;
+    border-width: 1px;
+}
+
+
+
 .ui-progressbar-value {
     transition: width 0.25s;
     -webkit-transition: width 0.5s;
@@ -761,13 +773,21 @@ input:checked + .slider:before {
     font-size: 0.7em;
     color: var(--primary-color);
     position: absolute;
-    bottom: -5%;
+    bottom: -8%;
 }
 
 .bar-container:nth-child(1) .bar-time,
+.bar-container:nth-child(3) .bar-time,
+.bar-container:nth-child(5) .bar-time,
 .bar-container:nth-child(7) .bar-time,
+.bar-container:nth-child(9) .bar-time,
+.bar-container:nth-child(11) .bar-time,
 .bar-container:nth-child(13) .bar-time,
+.bar-container:nth-child(15) .bar-time,
+.bar-container:nth-child(17) .bar-time,
 .bar-container:nth-child(19) .bar-time,
+.bar-container:nth-child(21) .bar-time,
+.bar-container:nth-child(23) .bar-time,
 .bar-container:nth-child(25) .bar-time {
     display: block;
 }

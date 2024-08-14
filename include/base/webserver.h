@@ -55,8 +55,8 @@ private:
     static void handleInfojson(AsyncWebServerRequest *request);
 
     static void handleUpdateWifiSettings(AsyncWebServerRequest *request);
-    static void handleUpdateDtuSettings(AsyncWebServerRequest *request);
-    static void handleUpdateBindingsSettings(AsyncWebServerRequest *request);
+    static void handleUpdateErnergyCostSettings(AsyncWebServerRequest *request);
+    static void handleUpdateDeviceDataSettings(AsyncWebServerRequest *request);
 
 
     static void handleGetWifiNetworks(AsyncWebServerRequest *request);

@@ -67,7 +67,9 @@ bool UserConfigManager::loadConfig(UserConfig &config)
     {
         Serial.println(F("UserConfigManager::loadConfig --- ERROR: config corrupted, reset to default"));
         saveConfig(defaultConfig);
-    } else {
+    }
+    else
+    {
         Serial.println("UserConfigManager::loadConfig - config loaded from json: " + String(filePath));
     }
 
@@ -120,11 +122,31 @@ void UserConfigManager::printConfigdata()
     Serial.print(F("update channel: \t\t"));
     Serial.println(userConfig.selectedUpdateChannel);
 
+    Serial.print(F("timezone offset: \t"));
+    Serial.println(userConfig.timezoneOffest);
+
     Serial.print(F("espUpdateTime: \t\t"));
     Serial.println(userConfig.espUpdateTime);
 
     Serial.print(F("display connected: \t"));
     Serial.println(userConfig.displayConnected);
+
+    Serial.print(F("\ndevice data\n"));
+    Serial.print(F("device name: \t\t\t"));
+    Serial.println(userConfig.deviceName);
+    Serial.print(F("max wait time: \t\t\t"));
+    Serial.println(userConfig.maxWaitTime);
+    Serial.print(F("tgt duration in hours: \t\t"));
+    Serial.println(userConfig.tgtDurationInHours);
+
+    Serial.print(F("energy cost settings\n"));
+    Serial.print(F("fixed tax price per kwh: \t"));
+    Serial.println(String(userConfig.fixedTaxPricePerKWh,5));
+    Serial.print(F("fixed price per kwh: \t\t"));
+    Serial.println(String(userConfig.fixedPricePerKWh,5));
+    Serial.print(F("tax fixed preced per kwh: \t"));
+    Serial.println(String(userConfig.taxVarPricePerKWH, 2));
+
     Serial.print(F("--------------------------------------\n"));
 }
 
@@ -143,6 +165,14 @@ JsonDocument UserConfigManager::mappingStructToJson(const UserConfig &config)
     doc["local"]["wifiAPstart"] = config.wifiAPstart;
     doc["local"]["timezoneOffest"] = config.timezoneOffest;
 
+    doc["device"]["deviceName"] = config.deviceName;
+    doc["device"]["maxWaitTime"] = config.maxWaitTime;
+    doc["device"]["tgtDurationInHours"] = config.tgtDurationInHours;
+
+    doc["energyCostSettings"]["fixedTaxPricePerKWh"] = config.fixedTaxPricePerKWh;
+    doc["energyCostSettings"]["fixedPricePerKWh"] = config.fixedPricePerKWh;
+    doc["energyCostSettings"]["taxVarPricePerKWH"] = config.taxVarPricePerKWH;
+    
     return doc;
 }
 
@@ -159,6 +189,14 @@ void UserConfigManager::mappingJsonToStruct(JsonDocument doc)
     userConfig.wifiAPstart = doc["local"]["wifiAPstart"];
     userConfig.timezoneOffest = doc["local"]["timezoneOffest"];
 
+    userConfig.deviceName = doc["device"]["deviceName"].as<String>();
+    userConfig.maxWaitTime = doc["device"]["maxWaitTime"];
+    userConfig.tgtDurationInHours = doc["device"]["tgtDurationInHours"];
+
+    userConfig.fixedTaxPricePerKWh = doc["energyCostSettings"]["fixedTaxPricePerKWh"];
+    userConfig.fixedPricePerKWh = doc["energyCostSettings"]["fixedPricePerKWh"];
+    userConfig.taxVarPricePerKWH = doc["energyCostSettings"]["taxVarPricePerKWH"];
+    
     return;
 }
 

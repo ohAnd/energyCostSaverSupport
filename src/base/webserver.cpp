@@ -48,8 +48,8 @@ void ESPwebserver::start()
 
     // user config requests
     asyncEspWebServer.on("/updateWifiSettings", handleUpdateWifiSettings);
-    asyncEspWebServer.on("/updateDtuSettings", handleUpdateDtuSettings);
-    asyncEspWebServer.on("/updateBindingsSettings", handleUpdateBindingsSettings);
+    asyncEspWebServer.on("/updateErnergyCostSettings", handleUpdateErnergyCostSettings);
+    asyncEspWebServer.on("/updateDeviceDataSettings", handleUpdateDeviceDataSettings);
 
     // admin config requests
     asyncEspWebServer.on("/config", handleConfigPage);
@@ -222,10 +222,10 @@ void ESPwebserver::handleConfigPage(AsyncWebServerRequest *request)
 void ESPwebserver::handleDataJson(AsyncWebServerRequest *request)
 {
     String JSON = "{";
-    JSON = JSON + "\"localtime\": " + String(platformData.currentTimestamp) + ",";
-    JSON = JSON + "\"ntpStamp\": " + String(platformData.currentNTPtime - userConfig.timezoneOffest) + ",";
-    JSON = JSON + "\"starttime\": " + String(platformData.espStarttime - userConfig.timezoneOffest) + ",";
-    JSON = JSON + "\"lastResponse\": " + String(platformData.lastCostDataUpdate) + ",";
+    JSON = JSON + "\"ntpStamp\": " + String(platformData.currentNTPtimeGMT) + ",";
+    JSON = JSON + "\"starttime\": " + String(platformData.espStarttimeGMT) + ",";
+    JSON = JSON + "\"lastResponse\": " + String(platformData.lastCostDataUpdateGMT) + ",";
+    JSON = JSON + "\"energyCostsLastEntry\": " + String(platformData.pricePerKWhLast) + ",";
     JSON = JSON + "\"energyCosts\": [";
     // rund through platformData.pricePerKWh and add to JSON
     for (size_t i = 0; i < 24; i++)
@@ -236,10 +236,16 @@ void ESPwebserver::handleDataJson(AsyncWebServerRequest *request)
         }
     JSON = JSON + "],";
 
+    JSON = JSON + "\"energyCostSettings\": {",
+    JSON = JSON + "\"fixedPricePerKWh\": " + String(userConfig.fixedPricePerKWh,5) + ",";
+    JSON = JSON + "\"fixedTaxPricePerKWh\": " + String(userConfig.fixedTaxPricePerKWh,5) + ",";
+    JSON = JSON + "\"taxVarPricePerKWH\": " + String(userConfig.taxVarPricePerKWH); 
+    JSON = JSON + "},",
+
     JSON = JSON + "\"device\": {",
-    JSON = JSON + "\"deviceName\": \"" + String(platformData.deviceName) + "\",";
-    JSON = JSON + "\"maxWaitTime\": " + String(platformData.maxWaitTime) + ",";
-    JSON = JSON + "\"tgtDurationInHours\": " + String(platformData.tgtDurationInHours);    
+    JSON = JSON + "\"deviceName\": \"" + String(userConfig.deviceName) + "\",";
+    JSON = JSON + "\"maxWaitTime\": " + String(userConfig.maxWaitTime) + ",";
+    JSON = JSON + "\"tgtDurationInHours\": " + String(userConfig.tgtDurationInHours);    
     JSON = JSON + "},",
 
     JSON = JSON + "\"result\": {",
@@ -340,152 +346,73 @@ void ESPwebserver::handleUpdateWifiSettings(AsyncWebServerRequest *request)
     }
 }
 
-void ESPwebserver::handleUpdateDtuSettings(AsyncWebServerRequest *request)
+void ESPwebserver::handleUpdateErnergyCostSettings(AsyncWebServerRequest *request)
 {
-    if (request->hasParam("dtuHostIpDomainSend", true) &&
-        request->hasParam("dtuDataCycleSend", true) &&
-        request->hasParam("dtuCloudPauseSend", true) &&
-        request->hasParam("dtuSsidSend", true) &&
-        request->hasParam("dtuPasswordSend", true))
+    if (request->hasParam("fixedPricePerKWhSend", true) &&
+        request->hasParam("fixedTaxPricePerKWhSend", true) &&
+        request->hasParam("taxVarPricePerKWHSend", true))
     {
-        String dtuHostIpDomainUser = request->getParam("dtuHostIpDomainSend", true)->value(); // retrieve message from webserver
-        String dtuDataCycle = request->getParam("dtuDataCycleSend", true)->value();           // retrieve message from webserver
-        String dtuCloudPause = request->getParam("dtuCloudPauseSend", true)->value();         // retrieve message from webserver
-        String dtuSSIDUser = request->getParam("dtuSsidSend", true)->value();                 // retrieve message from webserver
-        String dtuPassUser = request->getParam("dtuPasswordSend", true)->value();             // retrieve message from webserver
-        Serial.println("WEB:\t\t handleUpdateDtuSettings - got dtu ip: " + dtuHostIpDomainUser + "- got dtuDataCycle: " + dtuDataCycle + "- got dtu dtuCloudPause: " + dtuCloudPause);
-        Serial.println("WEB:\t\t handleUpdateDtuSettings - got dtu ssid: " + dtuSSIDUser + " - got WifiPass: " + dtuPassUser);
+        String fixedPricePerKWhSend = request->getParam("fixedPricePerKWhSend", true)->value(); // retrieve message from webserver
+        String fixedTaxPricePerKWhSend = request->getParam("fixedTaxPricePerKWhSend", true)->value();           // retrieve message from webserver
+        String taxVarPricePerKWHSend = request->getParam("taxVarPricePerKWHSend", true)->value();         // retrieve message from webserver
+        
+        Serial.println("WEB:\t\t handleUpdateErnergyCostSettings - got fixedPricePerKWhSend: " + fixedPricePerKWhSend + " - got fixedTaxPricePerKWhSend: " + fixedTaxPricePerKWhSend + " - got taxVarPricePerKWHSend: " + taxVarPricePerKWHSend);
 
-        // dtuHostIpDomainUser.toCharArray(userConfig.dtuHostIpDomain, sizeof(userConfig.dtuHostIpDomain));
-        // userConfig.espUpdateTime = dtuDataCycle.toInt();
-        // if (userConfig.espUpdateTime < 1)
-        //     userConfig.espUpdateTime = 1; // fix zero entry
-        // if (dtuCloudPause)
-        //     userConfig.dtuCloudPauseActive = true;
-        // else
-        //     userConfig.dtuCloudPauseActive = false;
-        // dtuSSIDUser.toCharArray(userConfig.dtuSsid, sizeof(userConfig.dtuSsid));
-        // dtuPassUser.toCharArray(userConfig.dtuPassword, sizeof(userConfig.dtuPassword));
+        userConfig.fixedPricePerKWh = fixedPricePerKWhSend.toFloat();
+        userConfig.fixedTaxPricePerKWh = fixedTaxPricePerKWhSend.toFloat();
+        userConfig.taxVarPricePerKWH = taxVarPricePerKWHSend.toFloat();
 
-        // configManager.saveConfig(userConfig);
-
-        // // change the dtu interface settings
-        // dtuInterface.setServer(userConfig.dtuHostIpDomain);
-        // dtuConnection.preventCloudErrors = userConfig.dtuCloudPauseActive;
+        configManager.saveConfig(userConfig);
 
         String JSON = "{";
-        // JSON = JSON + "\"dtuHostIpDomain\": \"" + userConfig.dtuHostIpDomain + "\",";
-        // JSON = JSON + "\"dtuSsid\": \"" + userConfig.dtuSsid + "\",";
-        // JSON = JSON + "\"dtuPassword\": \"" + userConfig.dtuPassword + "\"";
-        // JSON = JSON + "}";
-
-        request->send(200, "application/json", JSON);
-    }
-    else
-    {
-        request->send(400, "text/plain", "handleUpdateDtuSettings - ERROR requested without the expected params");
-        Serial.println(F("WEB:\t\t handleUpdateDtuSettings - ERROR without the expected params"));
-    }
-}
-
-void ESPwebserver::handleUpdateBindingsSettings(AsyncWebServerRequest *request)
-{
-    if (request->hasParam("openhabHostIpDomainSend", true) &&
-        request->hasParam("openhabPrefixSend", true) &&
-        request->hasParam("openhabActiveSend", true) &&
-        request->hasParam("mqttIpSend", true) &&
-        request->hasParam("mqttPortSend", true) &&
-        request->hasParam("mqttUserSend", true) &&
-        request->hasParam("mqttPassSend", true) &&
-        request->hasParam("mqttMainTopicSend", true) &&
-        request->hasParam("mqttActiveSend", true) &&
-        request->hasParam("mqttUseTLSSend", true) &&
-        request->hasParam("mqttHAautoDiscoveryONSend", true))
-    {
-        String openhabHostIpDomainUser = request->getParam("openhabHostIpDomainSend", true)->value(); // retrieve message from webserver
-        String openhabPrefix = request->getParam("openhabPrefixSend", true)->value();
-        String openhabActive = request->getParam("openhabActiveSend", true)->value();
-
-        String mqttIP = request->getParam("mqttIpSend", true)->value();
-        String mqttPort = request->getParam("mqttPortSend", true)->value();
-        String mqttUser = request->getParam("mqttUserSend", true)->value();
-        String mqttPass = request->getParam("mqttPassSend", true)->value();
-        String mqttMainTopic = request->getParam("mqttMainTopicSend", true)->value();
-        String mqttActive = request->getParam("mqttActiveSend", true)->value();
-        String mqttUseTLS = request->getParam("mqttUseTLSSend", true)->value();
-        String mqttHAautoDiscoveryON = request->getParam("mqttHAautoDiscoveryONSend", true)->value();
-
-        // bool mqttHAautoDiscoveryONlastState = userConfig.mqttHAautoDiscoveryON;
-        // Serial.println("WEB:\t\t handleUpdateBindingsSettings - HAautoDiscovery current state: " + String(mqttHAautoDiscoveryONlastState));
-
-        // openhabHostIpDomainUser.toCharArray(userConfig.openhabHostIpDomain, sizeof(userConfig.openhabHostIpDomain));
-        // openhabPrefix.toCharArray(userConfig.openItemPrefix, sizeof(userConfig.openItemPrefix));
-
-        // if (openhabActive == "1")
-        //     userConfig.openhabActive = true;
-        // else
-        //     userConfig.openhabActive = false;
-
-        // mqttIP.toCharArray(userConfig.mqttBrokerIpDomain, sizeof(userConfig.mqttBrokerIpDomain));
-        // userConfig.mqttBrokerPort = mqttPort.toInt();
-        // mqttUser.toCharArray(userConfig.mqttBrokerUser, sizeof(userConfig.mqttBrokerUser));
-        // mqttPass.toCharArray(userConfig.mqttBrokerPassword, sizeof(userConfig.mqttBrokerPassword));
-        // mqttMainTopic.toCharArray(userConfig.mqttBrokerMainTopic, sizeof(userConfig.mqttBrokerMainTopic));
-
-        // if (mqttActive == "1")
-        //     userConfig.mqttActive = true;
-        // else
-        //     userConfig.mqttActive = false;
-
-        // if (mqttUseTLS == "1")
-        //     userConfig.mqttUseTLS = true;
-        // else
-        //     userConfig.mqttUseTLS = false;
-
-        // if (mqttHAautoDiscoveryON == "1")
-        //     userConfig.mqttHAautoDiscoveryON = true;
-        // else
-        //     userConfig.mqttHAautoDiscoveryON = false;
-
-        // configManager.saveConfig(userConfig);
-
-        // if (userConfig.mqttActive)
-        // {
-        //     // changing to given mqtt setting - inlcuding reset the connection
-        //     mqttHandler.setConfiguration(userConfig.mqttBrokerIpDomain, userConfig.mqttBrokerPort, userConfig.mqttBrokerUser, userConfig.mqttBrokerPassword, userConfig.mqttUseTLS, (platformData.espUniqueName).c_str(), userConfig.mqttBrokerMainTopic, userConfig.mqttHAautoDiscoveryON, ((platformData.dtuGatewayIP).toString()).c_str());
-
-        //     Serial.println("WEB:\t\t handleUpdateBindingsSettings - HAautoDiscovery new state: " + String(userConfig.mqttHAautoDiscoveryON));
-        //     // mqttHAautoDiscoveryON going from on to off - send one time the delete messages
-        //     if (!userConfig.mqttHAautoDiscoveryON && mqttHAautoDiscoveryONlastState)
-        //         mqttHandler.requestMQTTconnectionReset(true);
-        //     else
-        //         mqttHandler.requestMQTTconnectionReset(false);
-
-        //     // after changing of auto discovery stop connection to initiate takeover of new settings
-        //     // mqttHandler.stopConnection();
-        // }
-
-        String JSON = "{";
-        // JSON = JSON + "\"openhabActive\": " + userConfig.openhabActive + ",";
-        // JSON = JSON + "\"openhabHostIpDomain\": \"" + userConfig.openhabHostIpDomain + "\",";
-        // JSON = JSON + "\"openItemPrefix\": \"" + userConfig.openItemPrefix + "\",";
-        // JSON = JSON + "\"mqttActive\": " + userConfig.mqttActive + ",";
-        // JSON = JSON + "\"mqttBrokerIpDomain\": \"" + userConfig.mqttBrokerIpDomain + "\",";
-        // JSON = JSON + "\"mqttBrokerPort\": " + String(userConfig.mqttBrokerPort) + ",";
-        // JSON = JSON + "\"mqttUseTLS\": " + userConfig.mqttUseTLS + ",";
-        // JSON = JSON + "\"mqttBrokerUser\": \"" + userConfig.mqttBrokerUser + "\",";
-        // JSON = JSON + "\"mqttBrokerPassword\": \"" + userConfig.mqttBrokerPassword + "\",";
-        // JSON = JSON + "\"mqttBrokerMainTopic\": \"" + userConfig.mqttBrokerMainTopic + "\",";
-        // JSON = JSON + "\"mqttHAautoDiscoveryON\": " + userConfig.mqttHAautoDiscoveryON;
+        JSON = JSON + "\"fixedPricePerKWh\": " + String(userConfig.fixedPricePerKWh,5) + ",";
+        JSON = JSON + "\"fixedTaxPricePerKWh\": " + String(userConfig.fixedTaxPricePerKWh,5) + ",";
+        JSON = JSON + "\"taxVarPricePerKWH\": " + String(userConfig.taxVarPricePerKWH);
         JSON = JSON + "}";
 
         request->send(200, "application/json", JSON);
-        Serial.println("WEB:\t\t handleUpdateBindingsSettings - send JSON: " + String(JSON));
+        Serial.println("WEB:\t\t handleUpdateErnergyCostSettings - send JSON: " + String(JSON));
+        platformData.userSettingsChanged = true;
     }
     else
     {
-        request->send(400, "text/plain", "handleUpdateBindingsSettings - ERROR request without the expected params");
-        Serial.println(F("WEB:\t\t handleUpdateBindingsSettings - ERROR without the expected params"));
+        request->send(400, "text/plain", "handleUpdateErnergyCostSettings - ERROR requested without the expected params");
+        Serial.println(F("WEB:\t\t handleUpdateErnergyCostSettings - ERROR without the expected params"));
+    }
+}
+
+void ESPwebserver::handleUpdateDeviceDataSettings(AsyncWebServerRequest *request)
+{
+    if (request->hasParam("deviceNameSend", true) &&
+        request->hasParam("deviceRuntimeSend", true) &&
+        request->hasParam("deviceMaxWaittimeSend", true))
+    {
+        String deviceNameSend = request->getParam("deviceNameSend", true)->value(); // retrieve message from webserver
+        String deviceRuntimeSend = request->getParam("deviceRuntimeSend", true)->value();
+        String deviceMaxWaittimeSend = request->getParam("deviceMaxWaittimeSend", true)->value();
+
+        userConfig.deviceName = deviceNameSend;
+        userConfig.tgtDurationInHours = deviceRuntimeSend.toInt();
+        userConfig.maxWaitTime = deviceMaxWaittimeSend.toInt();
+
+        configManager.saveConfig(userConfig);
+
+
+
+        String JSON = "{";
+        JSON = JSON + "\"deviceName\": \"" + userConfig.deviceName + "\",";
+        JSON = JSON + "\"tgtDurationInHours\": " + String(userConfig.tgtDurationInHours) + ",";
+        JSON = JSON + "\"maxWaitTime\": " + String(userConfig.maxWaitTime);
+        JSON = JSON + "}";
+
+        request->send(200, "application/json", JSON);
+        Serial.println("WEB:\t\t handleUpdateDeviceDataSettings - send JSON: " + String(JSON));
+        platformData.userSettingsChanged = true;
+    }
+    else
+    {
+        request->send(400, "text/plain", "handleUpdateDeviceDataSettings - ERROR request without the expected params");
+        Serial.println(F("WEB:\t\t handleUpdateDeviceDataSettings - ERROR without the expected params"));
     }
 }
 

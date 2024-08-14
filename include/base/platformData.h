@@ -24,20 +24,14 @@ struct baseDataStruct
   IPAddress dtuGatewayIP  = IPAddress(192, 168, 0, 1);
   uint32_t wifi_rssi_gateway = 0;
 
-  unsigned long espStarttime = 0;
-  unsigned long currentNTPtime = 0;
-  String currentNTPtimeFormatted = "not set";
-  uint32_t currentTimestamp = 1704063600;
+  unsigned long espStarttimeGMT = 0;
+  unsigned long currentNTPtimeGMT = 0;
   
-  unsigned long costDataUpdateCycleInSeconds = 1704063600;
-  unsigned long lastCostDataUpdate = 4000000001;
+  unsigned long lastCostDataUpdateGMT = 4000000001;
 
+  uint8_t pricePerKWhLast = 0;
   float pricePerKWh[24] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-  
-  // device
-  String deviceName = "washing machine";
-  uint8_t maxWaitTime = 12;
-  uint8_t tgtDurationInHours = 3;
+
   // result
   uint8_t currentHour = 0;
   uint8_t tgtStartHour = 0;
@@ -45,6 +39,8 @@ struct baseDataStruct
   float energyCostNow = 0;
   float energyCostSave = 0;
   
+  // settings changed by web ui
+  boolean userSettingsChanged = false;
 
 };
 #endif
