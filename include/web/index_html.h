@@ -563,10 +563,11 @@ const char INDEX_HTML[] PROGMEM = R"=====(
                 // set the color of the bar based where program should run
                 if ((currentHour % 24) >= tgtStartHour && (currentHour % 24) < (tgtStartHour + duration)) {
                     bar.style.backgroundColor = "green";
-                }else if (value > maxValue * 0.9) {
+                } else if (value > maxValue * 0.9) {
                     bar.style.backgroundColor = "darkred";
-                }
-                 else if (i > lastValidHour) {
+                } 
+                // if data not available
+                if (i > lastValidHour) {
                     bar.style.backgroundColor = "darkgrey";
                     barValue.innerHTML = "?";
                 }
