@@ -212,10 +212,10 @@ const char INDEX_HTML[] PROGMEM = R"=====(
     </div>
     <div id="frame">
         <div class="header">
-            <b>energy Cost Saver Support</b>
+            <b>energy Cost Saver Support<br/> <i id="deviceNameHeader">device</i></b>
         </div>
         <div class="row">
-            <div class="column" style="width: 100%;">
+            <div class="column" id="cost_diagram" style="width: 100%;">
                 <div>
                     cost diagram
                 </div>
@@ -225,7 +225,7 @@ const char INDEX_HTML[] PROGMEM = R"=====(
                 </div>
             </div>
 
-            <div class="column">
+            <div class="column"  id="user_display">
                 <div>
                     user display
                 </div>
@@ -518,6 +518,8 @@ const char INDEX_HTML[] PROGMEM = R"=====(
             var duration = data.device.tgtDurationInHours;
             var barDiagram = document.getElementsByClassName("bar-diagram")[0];
 
+            $('#deviceNameHeader').text(data.device.deviceName);
+
             // before appending new data, clear the old one
             while (barDiagram.firstChild) {
                 barDiagram.removeChild(barDiagram.firstChild);
@@ -563,10 +565,11 @@ const char INDEX_HTML[] PROGMEM = R"=====(
                 // set the color of the bar based where program should run
                 if ((currentHour % 24) >= tgtStartHour && (currentHour % 24) < (tgtStartHour + duration)) {
                     bar.style.backgroundColor = "green";
-                }else if (value > maxValue * 0.9) {
+                } else if (value > maxValue * 0.9) {
                     bar.style.backgroundColor = "darkred";
-                }
-                 else if (i > lastValidHour) {
+                } 
+                // if data not available
+                if (i > lastValidHour) {
                     bar.style.backgroundColor = "darkgrey";
                     barValue.innerHTML = "?";
                 }

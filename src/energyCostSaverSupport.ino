@@ -309,7 +309,7 @@ float getCurrentPriceList()
       uint64_t start = (static_cast<uint64_t>(nextHourData["start_timestamp"])) / 1000 + userConfig.timezoneOffest;
       uint64_t end = (static_cast<uint64_t>(nextHourData["end_timestamp"])) / 1000 + userConfig.timezoneOffest;
       platformData.pricePerKWh[i] = getCostForEpexPrice(nextHourPrice);
-      Serial.println("getCurrentPriceList:\t(" + String(i) + ")\t brutto: " + String(nextHourPrice, 4) + "€/kWh (netto: " + String(platformData.pricePerKWh[i], 4) + "€/kWh) - start (" + String(start) + "): " + getTimeStringByTimestamp(start) + " end (" + String(end) + "): " + getTimeStringByTimestamp(end));
+      Serial.println("getCurrentPriceList:\t(" + String(i) + ")\t brutto: " + String(nextHourPrice, 4) + "€/kWh (netto: " + String(platformData.pricePerKWh[i], 4) + "€/kWh) - start: " + getTimeStringByTimestamp(start) + " end: " + getTimeStringByTimestamp(end));
     }
     platformData.pricePerKWhLast = data.size() - 1;
   }
