@@ -54,7 +54,8 @@ hr {
     align-items: center;
     text-align: center;
     background-color: var(--header-background-color);
-    font-size: 5vmin;
+    /* font-size: 4.5vmin; */
+    font-size: 1.8vmax;
 
     border-radius: 10px;
     border-width: 1px;
@@ -170,32 +171,22 @@ hr {
 
 .footerButton {
     float: left;
-    padding-top: 1.5vh;
     padding-left: 20px;
-    font-size: 4v
 }
 
 .menuButton {
-    /* padding-top: 10px; */
-    padding-top: 1.5vh;
     padding-right: 20px;
     float: right;
     cursor: pointer;
-    font-size: 5vmin;
 }
 
 .notification {
-    /* background-color: #555; */
-    /* color: white; */
     text-decoration: none;
-    /* padding: 15px 26px; */
     position: relative;
     display: inline-block;
-    /* border-radius: 2px; */
 }
 
 .notification:hover {
-    /* background: red; */
     color: white;
 }
 
@@ -580,16 +571,27 @@ input:checked + .slider:before {
     width: 40%;
 }
 
-@media (orientation: portrait) {
-
     /* @media (max-width: 820px) { */
     /* @media (max-width: 739px) or (max-aspect-ratio: 10/9) { */
     /* @media (max-aspect-ratio: 10/8) { */
-    body {
-        /* font-size: 2.7vmin; */
+
+
+@media (orientation: portrait) {
+    .header {
+        height: 10%;
+        font-size: 4.5vmin;
     }
+
+    .row {
+        height: 82%;
+    }
+
+    .footer {
+        height: 8%;
+        font-size: 3.2em;
+    }
+
     .alert {
-        /* display: flex; */
         left: 2%;
         width: 96%;
         height: 7%;
@@ -597,34 +599,20 @@ input:checked + .slider:before {
     }
 
     .column {
-        width: 32.9%;
-        height: 33%;
+        width: 100%;
+        height: 32.5%;
         /* (100 / 3) - (6 * 0,3) = 32,133 */
         font-size: 1.5em;
-    }
-
-    /* .panelValueBox {
-        padding-top: 15%;
-    } */
-
-    #inverter_energy .panelValueBoxDetail,
-    #connection_state .panelValueBoxDetail {
-        /* color: rgb(119, 0, 255); */
-        /* font-size: 3.0vmin; */
-        font-size: 90%;
-        float: left;
-        width: 50%;
-        margin-top: 0.1%;
+        padding-top: 0.5%;
     }
 
     .panelValueBoxDetail {
-        /* display: none; */
+        width: 50%;
+        float: left;
         font-size: 3.0vmin;
-        /* float: none; */
-        width: 100%;
         border-bottom: var(--primary-color);
         border-width: 1px;
-        margin-top: 5%;
+        padding-bottom: 5%;
     }
 
     .panelHead {
@@ -637,27 +625,27 @@ input:checked + .slider:before {
         display: none;
     }
 
-    #inverter_energy,
+    #user_display,
     #connection_state {
         width: 99.3%;
-        /* float:none; */
+        height: 33%;
     }
 
     .panelValue {
-        /* padding-top: 23%; */
-        /* font-size: 7vmin; */
-        font-size: 1.5em;
+        font-size: 4.5em;
     }
 
     .panelValueSmall {
-        /* font-size: 3vmin; */
-        font-size: 1.4em;
+        font-size: 3.0em;
+    }
+
+    #connection_state .panelValueSmall {
+        font-size: 2.5em;
     }
 
     #firmware,
     #builddate,
     #screensize {
-        /* color: lightblue; */
         font-size: 2.5vmin;
         font-style: italic;
     }
@@ -665,7 +653,7 @@ input:checked + .slider:before {
     #footer_left {
         /* visibility: hidden; */
         /* display: none; */
-        width: 76%;
+        width: 50%;
         float: left;
     }
 
@@ -676,8 +664,7 @@ input:checked + .slider:before {
     }
 
     #footer_right {
-        width: 20%;
-        /* font-size: 10vmin; */
+        width: 50%;
     }
 
     .notification .badge {
@@ -687,6 +674,27 @@ input:checked + .slider:before {
 
     td {
         float: left;
+    }
+
+    .bar-value {
+         /* text will be displayed rotated with 90 degrees */
+        transform: rotate(-45deg);
+        /* text will be shifted to the right  */
+        margin-left: 100%;
+    }
+}
+
+
+
+@media (orientation: portrait) and (min-width: 540px) {
+    .panelValueBox {
+        padding-top: 1vmin;
+    }
+    .panelValue {
+        padding-bottom: 0px;
+    }
+    .panelValueBoxDetail {
+        margin-top: 0%;
     }
 }
 

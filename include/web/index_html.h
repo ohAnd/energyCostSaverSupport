@@ -212,10 +212,10 @@ const char INDEX_HTML[] PROGMEM = R"=====(
     </div>
     <div id="frame">
         <div class="header">
-            <b>energy Cost Saver Support</b>
+            <b>energy Cost Saver Support<br/> <i id="deviceNameHeader">device</i></b>
         </div>
         <div class="row">
-            <div class="column" style="width: 100%;">
+            <div class="column" id="cost_diagram" style="width: 100%;">
                 <div>
                     cost diagram
                 </div>
@@ -225,7 +225,7 @@ const char INDEX_HTML[] PROGMEM = R"=====(
                 </div>
             </div>
 
-            <div class="column">
+            <div class="column"  id="user_display">
                 <div>
                     user display
                 </div>
@@ -517,6 +517,8 @@ const char INDEX_HTML[] PROGMEM = R"=====(
             var lastValidHour = data.energyCostsLastEntry;
             var duration = data.device.tgtDurationInHours;
             var barDiagram = document.getElementsByClassName("bar-diagram")[0];
+
+            $('#deviceNameHeader').text(data.device.deviceName);
 
             // before appending new data, clear the old one
             while (barDiagram.firstChild) {
