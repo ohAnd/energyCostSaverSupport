@@ -312,6 +312,7 @@ float getCurrentPriceList()
       Serial.println("getCurrentPriceList:\t(" + String(i) + ")\t brutto: " + String(nextHourPrice, 4) + "€/kWh (netto: " + String(platformData.pricePerKWh[i], 4) + "€/kWh) - start: " + getTimeStringByTimestamp(start) + " end: " + getTimeStringByTimestamp(end));
     }
     platformData.pricePerKWhLast = data.size() - 1;
+    platformData.lastCostDataUpdateGMT = timeClient.getEpochTime() - userConfig.timezoneOffest;
   }
   else
   {
@@ -393,10 +394,8 @@ float getCostForEpexPrice(float rawPricePerKWH)
 
 void calculateCost()
 {
-  getCurrentPriceList();
   calculateCurrentCost();
   calculateBestCost();
-  platformData.lastCostDataUpdateGMT = timeClient.getEpochTime() - userConfig.timezoneOffest;
 }
 
 // ****
@@ -525,6 +524,7 @@ void startServices()
     delay(1);
 
     // first run and reset for next run
+    getCurrentPriceList();
     calculateCost();
   }
   else
@@ -811,7 +811,7 @@ void loop()
 
     previousMillisSpecial = currentMillis;
     // -------->
-    calculateCost();
+    getCurrentPriceList();
   }
 
   // long task
@@ -826,5 +826,6 @@ void loop()
     {
       timeClient.update();
     }
+    calculateCost();
   }
 }
