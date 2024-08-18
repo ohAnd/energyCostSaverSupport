@@ -136,10 +136,15 @@ void UserConfigManager::printConfigdata()
     Serial.println(userConfig.deviceName);
     Serial.print(F("max wait time: \t\t\t"));
     Serial.println(userConfig.maxWaitTime);
+    Serial.print(F("deviceDelayModeForward: \t\t"));
+    Serial.println(userConfig.deviceDelayModeForward);
     Serial.print(F("tgt duration in hours: \t\t"));
     Serial.println(userConfig.tgtDurationInHours);
+    Serial.print(F("tgtDurationConsumption: \t\t"));
+    Serial.println(userConfig.tgtDurationConsumption);
 
-    Serial.print(F("energy cost settings\n"));
+
+    Serial.print(F("\nenergy cost settings\n"));
     Serial.print(F("fixed tax price per kwh: \t"));
     Serial.println(String(userConfig.fixedTaxPricePerKWh,5));
     Serial.print(F("fixed price per kwh: \t\t"));
@@ -167,7 +172,9 @@ JsonDocument UserConfigManager::mappingStructToJson(const UserConfig &config)
 
     doc["device"]["deviceName"] = config.deviceName;
     doc["device"]["maxWaitTime"] = config.maxWaitTime;
+    doc["device"]["deviceDelayModeForward"] = config.deviceDelayModeForward;
     doc["device"]["tgtDurationInHours"] = config.tgtDurationInHours;
+    doc["device"]["tgtDurationConsumption"] = config.tgtDurationConsumption;
 
     doc["energyCostSettings"]["fixedTaxPricePerKWh"] = config.fixedTaxPricePerKWh;
     doc["energyCostSettings"]["fixedPricePerKWh"] = config.fixedPricePerKWh;
@@ -185,13 +192,15 @@ void UserConfigManager::mappingJsonToStruct(JsonDocument doc)
 
     userConfig.espUpdateTime = doc["esp"]["updateTime"].as<int>();
 
-    userConfig.selectedUpdateChannel = doc["local"]["selectedUpdateChannel"];
-    userConfig.wifiAPstart = doc["local"]["wifiAPstart"];
-    userConfig.timezoneOffest = doc["local"]["timezoneOffest"];
+    userConfig.selectedUpdateChannel = doc["local"]["selectedUpdateChannel"].as<int>();
+    userConfig.wifiAPstart = doc["local"]["wifiAPstart"].as<bool>();
+    userConfig.timezoneOffest = doc["local"]["timezoneOffest"].as<int>();
 
     userConfig.deviceName = doc["device"]["deviceName"].as<String>();
-    userConfig.maxWaitTime = doc["device"]["maxWaitTime"];
-    userConfig.tgtDurationInHours = doc["device"]["tgtDurationInHours"];
+    userConfig.maxWaitTime = doc["device"]["maxWaitTime"].as<uint8_t>();
+    userConfig.deviceDelayModeForward = doc["device"]["deviceDelayModeForward"].as<bool>();
+    userConfig.tgtDurationInHours = doc["device"]["tgtDurationInHours"].as<uint8_t>();
+    userConfig.tgtDurationConsumption = doc["device"]["tgtDurationConsumption"];
 
     userConfig.fixedTaxPricePerKWh = doc["energyCostSettings"]["fixedTaxPricePerKWh"];
     userConfig.fixedPricePerKWh = doc["energyCostSettings"]["fixedPricePerKWh"];

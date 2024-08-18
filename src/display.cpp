@@ -10,7 +10,7 @@ void Display::setup()
     Serial.println(F("OLED display:\t initialized"));
 }
 
-void Display::renderScreen(String time, String version, uint8_t delayHours, float price, float priceSave)
+void Display::renderScreen(String time, String version, uint8_t delayHours, float price, float priceSave, boolean delayToFinish)
 {
     displayTicks++;
     if (displayTicks > 1200)
@@ -21,6 +21,7 @@ void Display::renderScreen(String time, String version, uint8_t delayHours, floa
     lastDisplayData.delayHours = delayHours;
     lastDisplayData.saveCosts = priceSave;
     lastDisplayData.origCosts = price;
+    lastDisplayData.delayToFinish = delayToFinish;
 
     checkChangedValues();
 
@@ -74,6 +75,12 @@ void Display::drawMain()
 
     u8g2.setFont(u8g2_font_logisoso28_tf);
     u8g2.drawStr(43 + offset_x, 19 + offset_y, "h");
+
+    // show symbol only if delay to finish program is set
+    if(lastDisplayData.delayToFinish) {
+        u8g2.setFont(u8g2_font_open_iconic_all_1x_t);
+        u8g2.drawGlyph(53 + offset_x, 12 + offset_y, 0x40 ); // 
+    }
 
     //
     // u8g2.setFont(u8g2_font_6x10_tf);
