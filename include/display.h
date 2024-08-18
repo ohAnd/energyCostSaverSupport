@@ -18,6 +18,7 @@ struct DisplayData {
     float origCosts=0.0;
     const char *formattedTime=nullptr;
     const char *version=nullptr;
+    boolean delayToFinish=false;
     uint8_t rssiGW=0;
 };
 
@@ -25,7 +26,7 @@ class Display {
     public:
         Display();
         void setup();
-        void renderScreen(String time, String version, uint8_t delayHours, float price, float priceSave);
+        void renderScreen(String time, String version, uint8_t delayHours, float price, float priceSave, boolean delayToFinish);
         void drawFactoryMode(String version, String apName, String ip);
         void drawUpdateMode(String text,String text2="");
     private:

@@ -1,6 +1,6 @@
 {
-    "version": "1.1.6_localDev",
-    "versiondate": "15.08.2024 - 23:02:11",
-    "linksnapshot": "https://github.com/ohAnd/dtuGateway/releases/download/snapshot/energyCostSaver_ESP8266_snapshot_1.1.6_localDev.bin",
-    "link": "https://github.com/ohAnd/dtuGateway/releases/latest/download/energyCostSaver_ESP8266_release_1.1.6_localDev.bin"
+    "version": "1.2.30_localDev",
+    "versiondate": "18.08.2024 - 11:35:22",
+    "linksnapshot": "https://github.com/ohAnd/dtuGateway/releases/download/snapshot/energyCostSaver_ESP8266_snapshot_1.2.30_localDev.bin",
+    "link": "https://github.com/ohAnd/dtuGateway/releases/latest/download/energyCostSaver_ESP8266_release_1.2.30_localDev.bin"
 }

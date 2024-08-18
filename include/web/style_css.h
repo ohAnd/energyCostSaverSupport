@@ -24,12 +24,7 @@ body {
 }
 
 hr {
-    /* display: block;
-    height: 1px; */
-    /* border: 0; */
     border-top: 1px solid var(--primary-color);
-    /* margin: 1em 0;
-    padding: 0; */
 }
 
 /* reload bar at the top */
@@ -107,6 +102,9 @@ hr {
     font-size: 7.5vmin;
     width: 100%;
     padding-bottom: 5%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .panelValueSmall {
@@ -115,17 +113,18 @@ hr {
 
 .panelValueButton {
     font-size: 3vmin;
-	border-width: 1px;
+    border-width: 1px;
     border-color: var(--frame-color);
     border-style: solid;
     border-radius: 5px;
     padding-left: 2%;
-    margin-right: 2%;	
+    margin-right: 2%;
 }
+
 .panelValueButton:hover {
     border-color: white;
     border-width: 2px;
-	cursor: pointer;
+    cursor: pointer;
 }
 
 .panelValueBoxDetail {
@@ -136,6 +135,9 @@ hr {
     /* border-width: 1px;
     border-color: #21f333;
     border-style: solid; */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .panelHead {
@@ -230,19 +232,19 @@ hr {
     font-size: large;
 }
 
-.alert-success{
+.alert-success {
     color: #155724;
     background-color: #d4edda;
     border-color: #c3e6cb;
 }
 
-.alert-danger{
+.alert-danger {
     color: #721c24;
     background-color: #f8d7da;
     border-color: #f5c6cb;
 }
 
-.alert-warning{
+.alert-warning {
     color: #856404;
     background-color: #fff3cd;
     border-color: #ffeeba;
@@ -420,17 +422,17 @@ input {
 }
 
 input[type=checkbox] {
-    width:1.5em;
-    height:1.5em;
-    display:inline;
+    width: 1.5em;
+    height: 1.5em;
+    display: inline;
     position: relative;
     top: 0.3em;
 }
 
 input[type=file] {
-    width:1.5em;
-    height:1.5em;
-    display:inline;
+    width: 1.5em;
+    height: 1.5em;
+    display: inline;
     position: relative;
     top: 0.3em;
 }
@@ -493,8 +495,10 @@ td {
     top: -13px;
     position: relative;
     display: inline-block;
-    width: 60px; /* Adjusted width */
-    height: 34px; /* Adjusted height */
+    width: 60px;
+    /* Adjusted width */
+    height: 34px;
+    /* Adjusted height */
 }
 
 .switch input {
@@ -513,14 +517,17 @@ td {
     background-color: #ccc;
     -webkit-transition: .4s;
     transition: .4s;
-    border-radius: 34px; /* Adjusted for roundness */
+    border-radius: 34px;
+    /* Adjusted for roundness */
 }
 
 .slider:before {
     position: absolute;
     content: '';
-    height: 26px; /* Adjusted size */
-    width: 26px; /* Adjusted size */
+    height: 26px;
+    /* Adjusted size */
+    width: 26px;
+    /* Adjusted size */
     left: 4px;
     bottom: 4px;
     background-color: white;
@@ -529,11 +536,11 @@ td {
     border-radius: 50%;
 }
 
-input:checked + .slider {
+input:checked+.slider {
     background-color: var(--primary-color);
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
     -webkit-transform: translateX(26px);
     transform: translateX(26px);
 }
@@ -571,9 +578,14 @@ input:checked + .slider:before {
     width: 40%;
 }
 
-    /* @media (max-width: 820px) { */
-    /* @media (max-width: 739px) or (max-aspect-ratio: 10/9) { */
-    /* @media (max-aspect-ratio: 10/8) { */
+#delayMode {
+    font-size: x-small;
+    margin-top: -2vmin;
+}
+
+/* @media (max-width: 820px) { */
+/* @media (max-width: 739px) or (max-aspect-ratio: 10/9) { */
+/* @media (max-aspect-ratio: 10/8) { */
 
 
 @media (orientation: portrait) {
@@ -677,7 +689,7 @@ input:checked + .slider:before {
     }
 
     .bar-value {
-         /* text will be displayed rotated with 90 degrees */
+        /* text will be displayed rotated with 90 degrees */
         transform: rotate(-45deg);
         /* text will be shifted to the right  */
         margin-left: 100%;
@@ -690,10 +702,16 @@ input:checked + .slider:before {
     .panelValueBox {
         padding-top: 1vmin;
     }
+
     .panelValue {
         padding-bottom: 0px;
     }
+
     .panelValueBoxDetail {
+        margin-top: 0%;
+    }
+
+    #delayMode {
         margin-top: 0%;
     }
 }
@@ -738,8 +756,13 @@ input:checked + .slider:before {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 

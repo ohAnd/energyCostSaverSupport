@@ -31,11 +31,11 @@ baseDataStruct platformData;
 
 baseUpdateInfoStruct updateInfo;
 
-const long interval50ms = 50;   // interval (milliseconds)
-const long interval100ms = 100; // interval (milliseconds)
-const long intervalShort = 1 * 1000;   // interval (milliseconds)
-const long interval5000ms = 5 * 1000;  // interval (milliseconds)
-const long intervalLong = 60 * 1000;   // interval (milliseconds)
+const long interval50ms = 50;         // interval (milliseconds)
+const long interval100ms = 100;       // interval (milliseconds)
+const long intervalShort = 1 * 1000;  // interval (milliseconds)
+const long interval5000ms = 5 * 1000; // interval (milliseconds)
+const long intervalLong = 60 * 1000;  // interval (milliseconds)
 unsigned long previousMillis50ms = 0;
 unsigned long previousMillis100ms = 0;
 unsigned long previousMillisShort = 0;
@@ -100,9 +100,6 @@ ESPwebserver espWebServer;
 
 Display displayOLED;
 DisplayTFT displayTFT;
-
-// user config
-uint8_t tgtConsupmtionFactor = 1.2; // average consumption per hour e.g. washing machine needs 3.6 kWh in 3 hours -> factor = 1.2
 
 boolean checkWifiTask()
 {
@@ -242,7 +239,7 @@ JsonDocument getEPEXjson()
 
     // get the right tiemstamps for the request
     Serial.println("getEPEXjson:\t start getting data");
-     // using local time - offset - 1 h to get the prices also for the current hour
+    // using local time - offset - 1 h to get the prices also for the current hour
     uint64_t startTime = static_cast<uint64_t>(timeClient.getEpochTime() - userConfig.timezoneOffest - 3600) * 1000;
     uint64_t endTime = startTime + 86400000 + 3600000; // 24 hours + 1 hour
     String url = "";
@@ -312,6 +309,7 @@ float getCurrentPriceList()
       Serial.println("getCurrentPriceList:\t(" + String(i) + ")\t brutto: " + String(nextHourPrice, 4) + "€/kWh (netto: " + String(platformData.pricePerKWh[i], 4) + "€/kWh) - start: " + getTimeStringByTimestamp(start) + " end: " + getTimeStringByTimestamp(end));
     }
     platformData.pricePerKWhLast = data.size() - 1;
+    platformData.lastCostDataUpdateGMT = timeClient.getEpochTime() - userConfig.timezoneOffest;
   }
   else
   {
@@ -322,15 +320,15 @@ float getCurrentPriceList()
 
 void calculateCurrentCost()
 {
-  float pricePerKWhNow = platformData.pricePerKWh[0];
-  Serial.println("calculateCurrentCost\t price per kWh now: " + String(pricePerKWhNow, 4) + " €/kWh");
+  Serial.println("calculateCurrentCost\t price per kWh now: " + String(platformData.pricePerKWh[0], 4) + " €/kWh");
 
   platformData.energyCostNow = 0;
   for (uint8_t i = 0; i < userConfig.tgtDurationInHours; i++)
   {
     platformData.energyCostNow = platformData.energyCostNow + platformData.pricePerKWh[i];
   }
-  platformData.energyCostNow = tgtConsupmtionFactor * platformData.energyCostNow;
+  // userConfig.tgtDurationConsumption / userConfig.tgtDurationInHours = consumption multiplier for the whole duration - e.g. 3.6 kWh in 3 hours -> 1.2
+  platformData.energyCostNow = (userConfig.tgtDurationConsumption / userConfig.tgtDurationInHours) * platformData.energyCostNow;
   Serial.println("calculateCurrentCost\t sum price for duration: " + String(platformData.energyCostNow, 4) + " €/kWh");
 }
 
@@ -366,14 +364,15 @@ void calculateBestCost()
 
     // Serial.println("calculateBestCost\t (" + String(i) + ")\ttotalCost: " + String(totalCost, 4) + " € --- hour: " + String(startHour) + " h" + " -\t cost at hour: " + String(platformData.pricePerKWh[i], 5) + " €/kWh");
   }
-  // get the lowest cost for the whole duration
-  platformData.energyCostSave = tgtConsupmtionFactor * minCost;
+  // get the lowest cost for the whole duration incl. consumption factor
+  platformData.energyCostSave = (userConfig.tgtDurationConsumption / userConfig.tgtDurationInHours) * minCost;
 
   platformData.tgtStartHour = platformData.tgtStartHour + platformData.currentHour;
   if (platformData.tgtStartHour >= 24)
   {
     platformData.tgtStartHour = platformData.tgtStartHour - 24;
   }
+
   Serial.println("calculateBestCost\t minCost: " + String(minCost, 4) + " € --- tgtStartHour: " + String(platformData.tgtStartHour) + " h");
 
   if (platformData.tgtStartHour < platformData.currentHour)
@@ -382,6 +381,10 @@ void calculateBestCost()
   }
   else
     platformData.tgtDelayHours = platformData.tgtStartHour - platformData.currentHour;
+
+  // adapting the delay hours for the specific device delay mode - delay until finish or delay from start
+  if (userConfig.deviceDelayModeForward)
+    platformData.tgtDelayHours = platformData.tgtDelayHours + userConfig.tgtDurationInHours;
 
   Serial.println("calculateBestCost\t price sum now: " + String(platformData.energyCostNow, 4) + " € --- price sum save: " + String(platformData.energyCostSave, 4) + " €");
 }
@@ -393,10 +396,8 @@ float getCostForEpexPrice(float rawPricePerKWH)
 
 void calculateCost()
 {
-  getCurrentPriceList();
   calculateCurrentCost();
   calculateBestCost();
-  platformData.lastCostDataUpdateGMT = timeClient.getEpochTime() - userConfig.timezoneOffest;
 }
 
 // ****
@@ -525,6 +526,7 @@ void startServices()
     delay(1);
 
     // first run and reset for next run
+    getCurrentPriceList();
     calculateCost();
   }
   else
@@ -743,7 +745,13 @@ void loop()
     {
       // display tasks every 50ms = 20Hz
       if (userConfig.displayConnected == 0)
-        displayOLED.renderScreen(getTimeStringByTimestamp(timeClient.getEpochTime()), "Stand: " + getTimeStringByTimestamp(platformData.lastCostDataUpdateGMT  + userConfig.timezoneOffest, true), platformData.tgtDelayHours, platformData.energyCostNow, platformData.energyCostSave);
+        displayOLED.renderScreen(
+            getTimeStringByTimestamp(timeClient.getEpochTime()),
+            "Stand: " + getTimeStringByTimestamp(platformData.lastCostDataUpdateGMT + userConfig.timezoneOffest, true),
+            platformData.tgtDelayHours,
+            platformData.energyCostNow,
+            platformData.energyCostSave,
+            userConfig.deviceDelayModeForward);
     }
   }
 
@@ -776,7 +784,8 @@ void loop()
         WiFi.disconnect();
       }
     }
-    if(platformData.userSettingsChanged) {
+    if (platformData.userSettingsChanged)
+    {
       calculateCost();
       platformData.userSettingsChanged = false;
     }
@@ -785,7 +794,7 @@ void loop()
   // 5s task
   if (currentMillis - previousMillis5000ms >= interval5000ms)
   {
-    Serial.printf(">>>>> %02is task - ", int(interval5000ms/1000));
+    Serial.printf(">>>>> %02is task - ", int(interval5000ms / 1000));
     Serial.println("NTP: " + timeClient.getFormattedTime());
 
     // Serial.print(" --- currentMillis " + String(currentMillis) + " --- ");
@@ -811,7 +820,7 @@ void loop()
 
     previousMillisSpecial = currentMillis;
     // -------->
-    calculateCost();
+    getCurrentPriceList();
   }
 
   // long task
@@ -826,5 +835,6 @@ void loop()
     {
       timeClient.update();
     }
+    calculateCost();
   }
 }

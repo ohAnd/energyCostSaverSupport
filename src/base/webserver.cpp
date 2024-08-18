@@ -233,19 +233,21 @@ void ESPwebserver::handleDataJson(AsyncWebServerRequest *request)
         JSON += "{\"value\": " + String(platformData.pricePerKWh[i]) + "}";
         if (i != 24 - 1)
             JSON += ",";
-        }
+    }
     JSON = JSON + "],";
 
     JSON = JSON + "\"energyCostSettings\": {",
-    JSON = JSON + "\"fixedPricePerKWh\": " + String(userConfig.fixedPricePerKWh,5) + ",";
-    JSON = JSON + "\"fixedTaxPricePerKWh\": " + String(userConfig.fixedTaxPricePerKWh,5) + ",";
-    JSON = JSON + "\"taxVarPricePerKWH\": " + String(userConfig.taxVarPricePerKWH); 
+    JSON = JSON + "\"fixedPricePerKWh\": " + String(userConfig.fixedPricePerKWh, 5) + ",";
+    JSON = JSON + "\"fixedTaxPricePerKWh\": " + String(userConfig.fixedTaxPricePerKWh, 5) + ",";
+    JSON = JSON + "\"taxVarPricePerKWH\": " + String(userConfig.taxVarPricePerKWH);
     JSON = JSON + "},",
 
     JSON = JSON + "\"device\": {",
     JSON = JSON + "\"deviceName\": \"" + String(userConfig.deviceName) + "\",";
     JSON = JSON + "\"maxWaitTime\": " + String(userConfig.maxWaitTime) + ",";
-    JSON = JSON + "\"tgtDurationInHours\": " + String(userConfig.tgtDurationInHours);    
+    JSON = JSON + "\"deviceDelayModeForward\": " + String(userConfig.deviceDelayModeForward) + ",";
+    JSON = JSON + "\"tgtDurationInHours\": " + String(userConfig.tgtDurationInHours) + ",";
+    JSON = JSON + "\"tgtDurationConsumption\": " + String(userConfig.tgtDurationConsumption);
     JSON = JSON + "},",
 
     JSON = JSON + "\"result\": {",
@@ -352,10 +354,10 @@ void ESPwebserver::handleUpdateErnergyCostSettings(AsyncWebServerRequest *reques
         request->hasParam("fixedTaxPricePerKWhSend", true) &&
         request->hasParam("taxVarPricePerKWHSend", true))
     {
-        String fixedPricePerKWhSend = request->getParam("fixedPricePerKWhSend", true)->value(); // retrieve message from webserver
-        String fixedTaxPricePerKWhSend = request->getParam("fixedTaxPricePerKWhSend", true)->value();           // retrieve message from webserver
-        String taxVarPricePerKWHSend = request->getParam("taxVarPricePerKWHSend", true)->value();         // retrieve message from webserver
-        
+        String fixedPricePerKWhSend = request->getParam("fixedPricePerKWhSend", true)->value();       // retrieve message from webserver
+        String fixedTaxPricePerKWhSend = request->getParam("fixedTaxPricePerKWhSend", true)->value(); // retrieve message from webserver
+        String taxVarPricePerKWHSend = request->getParam("taxVarPricePerKWHSend", true)->value();     // retrieve message from webserver
+
         Serial.println("WEB:\t\t handleUpdateErnergyCostSettings - got fixedPricePerKWhSend: " + fixedPricePerKWhSend + " - got fixedTaxPricePerKWhSend: " + fixedTaxPricePerKWhSend + " - got taxVarPricePerKWHSend: " + taxVarPricePerKWHSend);
 
         userConfig.fixedPricePerKWh = fixedPricePerKWhSend.toFloat();
@@ -365,8 +367,8 @@ void ESPwebserver::handleUpdateErnergyCostSettings(AsyncWebServerRequest *reques
         configManager.saveConfig(userConfig);
 
         String JSON = "{";
-        JSON = JSON + "\"fixedPricePerKWh\": " + String(userConfig.fixedPricePerKWh,5) + ",";
-        JSON = JSON + "\"fixedTaxPricePerKWh\": " + String(userConfig.fixedTaxPricePerKWh,5) + ",";
+        JSON = JSON + "\"fixedPricePerKWh\": " + String(userConfig.fixedPricePerKWh, 5) + ",";
+        JSON = JSON + "\"fixedTaxPricePerKWh\": " + String(userConfig.fixedTaxPricePerKWh, 5) + ",";
         JSON = JSON + "\"taxVarPricePerKWH\": " + String(userConfig.taxVarPricePerKWH);
         JSON = JSON + "}";
 
@@ -384,25 +386,34 @@ void ESPwebserver::handleUpdateErnergyCostSettings(AsyncWebServerRequest *reques
 void ESPwebserver::handleUpdateDeviceDataSettings(AsyncWebServerRequest *request)
 {
     if (request->hasParam("deviceNameSend", true) &&
-        request->hasParam("deviceRuntimeSend", true) &&
-        request->hasParam("deviceMaxWaittimeSend", true))
+        request->hasParam("tgtDurationInHoursSend", true) &&
+        request->hasParam("tgtDurationConsumptionSend", true) &&
+        request->hasParam("maxWaitTimeSend", true) &&
+        request->hasParam("deviceDelayModeForwardSend", true))
     {
         String deviceNameSend = request->getParam("deviceNameSend", true)->value(); // retrieve message from webserver
-        String deviceRuntimeSend = request->getParam("deviceRuntimeSend", true)->value();
-        String deviceMaxWaittimeSend = request->getParam("deviceMaxWaittimeSend", true)->value();
+        String tgtDurationInHoursSend = request->getParam("tgtDurationInHoursSend", true)->value();
+        String tgtDurationConsumptionSend = request->getParam("tgtDurationConsumptionSend", true)->value();
+        String maxWaitTimeSend = request->getParam("maxWaitTimeSend", true)->value();
+        String deviceDelayModeForwardSend = request->getParam("deviceDelayModeForwardSend", true)->value();
 
         userConfig.deviceName = deviceNameSend;
-        userConfig.tgtDurationInHours = deviceRuntimeSend.toInt();
-        userConfig.maxWaitTime = deviceMaxWaittimeSend.toInt();
+        userConfig.tgtDurationInHours = tgtDurationInHoursSend.toInt();
+        userConfig.tgtDurationConsumption = tgtDurationConsumptionSend.toFloat();
+        userConfig.maxWaitTime = maxWaitTimeSend.toInt();
+        if (deviceDelayModeForwardSend == "1")
+            userConfig.deviceDelayModeForward = true;
+        else
+            userConfig.deviceDelayModeForward = false;
 
         configManager.saveConfig(userConfig);
-
-
 
         String JSON = "{";
         JSON = JSON + "\"deviceName\": \"" + userConfig.deviceName + "\",";
         JSON = JSON + "\"tgtDurationInHours\": " + String(userConfig.tgtDurationInHours) + ",";
-        JSON = JSON + "\"maxWaitTime\": " + String(userConfig.maxWaitTime);
+        JSON = JSON + "\"tgtDurationConsumption\": " + String(userConfig.tgtDurationConsumption) + ",";
+        JSON = JSON + "\"maxWaitTime\": " + String(userConfig.maxWaitTime) + ",";
+        JSON = JSON + "\"deviceDelayModeForward\": " + String(userConfig.deviceDelayModeForward);
         JSON = JSON + "}";
 
         request->send(200, "application/json", JSON);
@@ -411,8 +422,8 @@ void ESPwebserver::handleUpdateDeviceDataSettings(AsyncWebServerRequest *request
     }
     else
     {
-        request->send(400, "text/plain", "handleUpdateDeviceDataSettings - ERROR request without the expected params");
-        Serial.println(F("WEB:\t\t handleUpdateDeviceDataSettings - ERROR without the expected params"));
+        request->send(400, "text/plain", "handleUpdateDeviceDataSettings - ERROR - request without the expected params");
+        Serial.println(F("WEB:\t\t handleUpdateDeviceDataSettings - ERROR - request without the expected params"));
     }
 }
 

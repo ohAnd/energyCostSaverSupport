@@ -30,6 +30,8 @@ struct UserConfig
     String deviceName = "washing machine";
     uint8_t maxWaitTime = 12;
     uint8_t tgtDurationInHours = 3;
+    float tgtDurationConsumption = 3.6; // avg consumption in kWh for the program runtime
+    boolean deviceDelayModeForward = false; // the delay will be calclated from the start time, otherwise from the end time
 };
 
 extern UserConfig userConfig;

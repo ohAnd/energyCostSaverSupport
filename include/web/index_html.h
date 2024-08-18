@@ -75,14 +75,27 @@ const char INDEX_HTML[] PROGMEM = R"=====(
                 duration / runtime of the program in hours (round up to full hours):
             </div>
             <div>
-                <input type="text" id="deviceRuntime">
+                <input type="number" id="tgtDurationInHours" min="1" max="20" placeholder="3">
+            </div>
+            <div>
+                average energy consumption in kWh for the program:
+            </div>
+            <div>
+                <input type="number" id="tgtDurationConsumption" min="0.0" max="50.0" step="0.1" placeholder="3.6">
+            </div>
+            <div>
+                <input type="checkbox" id="deviceDelayModeForward"> show delay hours until program finish <br><small>(On
+                    =
+                    shows the time in hours until the program shopuld be finished, Off = shows the time until the
+                    program should be
+                    start - depends on the kind of machine)</small><br>
             </div>
             <hr>
             <div>
                 maximum wait time in hours for the start of the program:
             </div>
             <div>
-                <input type="text" id="deviceMaxWaittime">
+                <input type="number" id="maxWaitTime" min="0" max="23" placeholder="12">
             </div>
             <hr>
             <div style="text-align: center;">
@@ -104,14 +117,14 @@ const char INDEX_HTML[] PROGMEM = R"=====(
                 fix costs per kWh in &euro; without additonal tax/ fee:
             </div>
             <div>
-                <input type="number" id="fixedPricePerKWh" placeholder="0.0000">
+                <input type="number" id="fixedPricePerKWh" placeholder="0.0000" step="0.0001">
             </div>
             <hr>
             <div>
                 fix costs per kWh in &euro; non tax free:
             </div>
             <div>
-                <input type="number" id="fixedTaxPricePerKWh" min="0" max="10" placeholder="0.01">
+                <input type="number" id="fixedTaxPricePerKWh" min="0" max="10" placeholder="0.00001" step="0.00001">
             </div>
             <hr>
             <div>
@@ -212,7 +225,7 @@ const char INDEX_HTML[] PROGMEM = R"=====(
     </div>
     <div id="frame">
         <div class="header">
-            <b>energy Cost Saver Support<br/> <i id="deviceNameHeader">device</i></b>
+            <b>energy Cost Saver Support<br /> <i id="deviceNameHeader">device</i></b>
         </div>
         <div class="row">
             <div class="column" id="cost_diagram" style="width: 100%;">
@@ -225,11 +238,12 @@ const char INDEX_HTML[] PROGMEM = R"=====(
                 </div>
             </div>
 
-            <div class="column"  id="user_display">
+            <div class="column" id="user_display">
                 <div>
                     user display
                 </div>
                 <div class="panelValueBox">
+                    <div id="delayMode">finish in</div>
                     <b id="tgtDelayHours" class="panelValue valueText">-- h</b>
                     <div class="panelValueBoxDetail">
                         <small>price now<br></small>
@@ -420,6 +434,12 @@ const char INDEX_HTML[] PROGMEM = R"=====(
             // $('#tgtDelayHours').html(data.tgtDelayHours + " h");
             checkValueUpdate('#tgtDelayHours', data.result.tgtDelayHours + " h");
 
+            if (data.device.deviceDelayModeForward == 0) {
+                $('#delayMode').html("start in");
+            } else {
+                $('#delayMode').html("finish in");
+            }
+
             $('#gwtime').html(getTime(data.ntpStamp));
             $('#gwtime2').html(getTime(data.ntpStamp, "date"));
 
@@ -539,13 +559,13 @@ const char INDEX_HTML[] PROGMEM = R"=====(
                 }
             }
             minValue = minValue - 0.01;
-            
+
 
             // calculate the height percentage for each bar based on the highest value
             for (var i = 0; i < jsonData.length; i++) {
                 var entry = jsonData[i];
                 var value = entry.value;
-                var heightPercentage = (((value) - minValue) / (maxValue  - minValue)) * 100;
+                var heightPercentage = (((value) - minValue) / (maxValue - minValue)) * 100;
                 // console.log("(" + i + ")value: " + value + " %: " + heightPercentage);
 
                 // create the bar container
@@ -567,7 +587,7 @@ const char INDEX_HTML[] PROGMEM = R"=====(
                     bar.style.backgroundColor = "green";
                 } else if (value > maxValue * 0.9) {
                     bar.style.backgroundColor = "darkred";
-                } 
+                }
                 // if data not available
                 if (i > lastValidHour) {
                     bar.style.backgroundColor = "darkgrey";
@@ -604,8 +624,14 @@ const char INDEX_HTML[] PROGMEM = R"=====(
             $('#btnSaveDtuSettings').attr('onclick', "changeDeviceData();")
 
             $('#deviceName').val(cacheData.device.deviceName);
-            $('#deviceRuntime').val(cacheData.device.tgtDurationInHours);
-            $('#deviceMaxWaittime').val(cacheData.device.maxWaitTime);
+            $('#tgtDurationInHours').val(cacheData.device.tgtDurationInHours);
+            $('#tgtDurationConsumption').val(cacheData.device.tgtDurationConsumption);
+            $('#maxWaitTime').val(cacheData.device.maxWaitTime);
+            if (cacheData.device.deviceDelayModeForward) {
+                $('#deviceDelayModeForward').prop("checked", true);
+            } else {
+                $('#deviceDelayModeForward').prop("checked", false);
+            }
         }
 
         $('.passcheck').click(function () {
@@ -731,15 +757,25 @@ const char INDEX_HTML[] PROGMEM = R"=====(
 
         function changeDeviceData() {
             var deviceNameSend = $('#deviceName').val();
-            var deviceRuntimeSend = $('#deviceRuntime').val();
-            var deviceMaxWaittimeSend = $('#deviceMaxWaittime').val();
+            var tgtDurationInHoursSend = $('#tgtDurationInHours').val();
+            var tgtDurationConsumptionSend = $('#tgtDurationConsumption').val();
+            var maxWaitTimeSend = $('#maxWaitTime').val();
+            var deviceDelayModeForwardSend = 0;
+            if ($("#deviceDelayModeForward").is(':checked')) {
+                deviceDelayModeForwardSend = 1;
+            } else {
+                deviceDelayModeForwardSend = 0;
+            }
 
             var data = {};
             data["deviceNameSend"] = deviceNameSend;
-            data["deviceRuntimeSend"] = deviceRuntimeSend;
-            data["deviceMaxWaittimeSend"] = deviceMaxWaittimeSend;
+            data["tgtDurationInHoursSend"] = tgtDurationInHoursSend;
+            data["tgtDurationConsumptionSend"] = tgtDurationConsumptionSend;
+            data["maxWaitTimeSend"] = maxWaitTimeSend;
+            data["deviceDelayModeForwardSend"] = deviceDelayModeForwardSend;
 
             console.log("send to server: deviceNameSend: " + deviceNameSend);
+            console.log("send to server: deviceDelayModeForwardSend: " + deviceDelayModeForwardSend);
 
             const urlEncodedDataPairs = [];
 
@@ -766,10 +802,13 @@ const char INDEX_HTML[] PROGMEM = R"=====(
             strResult = JSON.parse(xmlHttp.responseText);
             console.log("got from server: " + strResult);
             console.log("got from server - strResult.deviceName: " + strResult.deviceName + " - cmp with: " + deviceNameSend);
-            console.log("got from server - strResult.deviceRuntime: " + strResult.deviceRuntime + " - cmp with: " + deviceRuntimeSend);
-            console.log("got from server - strResult.deviceMaxWaittime: " + strResult.deviceMaxWaittime + " - cmp with: " + deviceMaxWaittimeSend);
+            console.log("got from server - strResult.tgtDurationInHours: " + strResult.tgtDurationInHours + " - cmp with: " + tgtDurationInHoursSend);
+            console.log("got from server - strResult.maxWaitTime: " + strResult.maxWaitTime + " - cmp with: " + maxWaitTimeSend);
 
-            if (strResult.deviceName == deviceNameSend && strResult.deviceRuntime == deviceRuntimeSend && strResult.deviceMaxWaittime == deviceMaxWaittimeSend) {
+            if (strResult.deviceName == deviceNameSend &&
+                strResult.tgtDurationInHours == tgtDurationInHoursSend &&
+                strResult.tgtDurationConsumption == tgtDurationConsumptionSend &&
+                strResult.maxWaitTime == maxWaitTimeSend) {
                 console.log("check saved data - OK");
                 showAlert('change DeviceData settings', 'Your settings were successfully saved and will be applied.', 'alert-success');
             } else {
