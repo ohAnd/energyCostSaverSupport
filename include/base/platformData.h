@@ -40,7 +40,8 @@ struct baseDataStruct
   float energyCostSave = 0;
   
   // settings changed by web ui
-  boolean userSettingsChanged = false;
+  boolean energySettingsChanged = false;
+  boolean deviceSettingsChanged = false;
 
 };
 #endif

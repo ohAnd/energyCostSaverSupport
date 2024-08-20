@@ -99,7 +99,7 @@ const char INDEX_HTML[] PROGMEM = R"=====(
             </div>
             <hr>
             <div style="text-align: center;">
-                <b onclick="changeDeviceData()" id="btnSaveDtuSettings" class="form-button btn">save</b>
+                <b onclick="changeDeviceData()" id="btnSaveDeviceSettings" class="form-button btn">save</b>
                 <b onclick="hide('#changeSettings')" id="btnSettingsClose" class="form-button btn">close</b>
             </div>
         </div>
@@ -135,7 +135,7 @@ const char INDEX_HTML[] PROGMEM = R"=====(
             </div>
             <hr>
             <div style="text-align: center;">
-                <b onclick="changeEnergyCostsData()" id="btnSaveDtuSettings" class="form-button btn">save</b>
+                <b onclick="changeEnergyCostsData()" id="btnSaveEnergySettings" class="form-button btn">save</b>
                 <b onclick="hide('#changeSettings')" id="btnSettingsClose" class="form-button btn">close</b>
             </div>
         </div>
@@ -610,8 +610,8 @@ const char INDEX_HTML[] PROGMEM = R"=====(
         }
 
         function getEnergyData() {
-            $('#btnSaveDtuSettings').css('opacity', '1.0');
-            $('#btnSaveDtuSettings').attr('onclick', "changeEnergyCostsData();")
+            $('#btnSaveEnergySettings').css('opacity', '1.0');
+            $('#btnSaveEnergySettings').attr('onclick', "changeEnergyCostsData();")
 
             $('#fixedPricePerKWh').val(cacheData.energyCostSettings.fixedPricePerKWh);
             $('#fixedTaxPricePerKWh').val(cacheData.energyCostSettings.fixedTaxPricePerKWh);
@@ -620,8 +620,8 @@ const char INDEX_HTML[] PROGMEM = R"=====(
 
         function getDeviceData() {
             // active
-            $('#btnSaveDtuSettings').css('opacity', '1.0');
-            $('#btnSaveDtuSettings').attr('onclick', "changeDeviceData();")
+            $('#btnSaveDeviceSettings').css('opacity', '1.0');
+            $('#btnSaveDeviceSettings').attr('onclick', "changeDeviceData();")
 
             $('#deviceName').val(cacheData.device.deviceName);
             $('#tgtDurationInHours').val(cacheData.device.tgtDurationInHours);
@@ -747,10 +747,6 @@ const char INDEX_HTML[] PROGMEM = R"=====(
             } else {
                 showAlert('Some error occured!', 'change Energy Costs Data settings could not be saved. Please try again!', 'alert-danger');
             }
-
-            //$('#btnSaveDtuSettings').css('opacity', '0.3');
-            //$('#btnSaveDtuSettings').attr('onclick', "")
-
             hide('#changeSettings');
             return;
         }
@@ -875,9 +871,6 @@ const char INDEX_HTML[] PROGMEM = R"=====(
             } catch (error) {
                 console.log("error at request change release channel: " + error);
             }
-
-            //$('#btnSaveDtuSettings').css('opacity', '0.3');
-            //$('#btnSaveDtuSettings').attr('onclick', "")
 
             hide('#changeSettings');
             return;

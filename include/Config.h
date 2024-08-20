@@ -15,7 +15,7 @@ struct UserConfig
       
     uint8_t displayConnected      = 0; // OLED default
 
-    unsigned int espUpdateTime    = 31;
+    unsigned int espUpdateTime    = 60 * 15; // 15 minutes
 
     boolean wifiAPstart           = true;
     int selectedUpdateChannel     = 0; // 0 - release 1 - snapshot
