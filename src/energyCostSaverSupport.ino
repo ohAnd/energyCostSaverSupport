@@ -784,11 +784,17 @@ void loop()
         WiFi.disconnect();
       }
     }
-    if (platformData.userSettingsChanged)
+    if (platformData.energySettingsChanged)
+    {
+      getCurrentPriceList();
+      platformData.energySettingsChanged = false;
+    }
+    if (platformData.deviceSettingsChanged || platformData.energySettingsChanged)
     {
       calculateCost();
-      platformData.userSettingsChanged = false;
-    }
+      platformData.deviceSettingsChanged = false;
+      platformData.energySettingsChanged = false;
+    }    
   }
 
   // 5s task

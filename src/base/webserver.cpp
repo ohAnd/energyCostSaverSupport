@@ -374,7 +374,7 @@ void ESPwebserver::handleUpdateErnergyCostSettings(AsyncWebServerRequest *reques
 
         request->send(200, "application/json", JSON);
         Serial.println("WEB:\t\t handleUpdateErnergyCostSettings - send JSON: " + String(JSON));
-        platformData.userSettingsChanged = true;
+        platformData.energySettingsChanged = true;
     }
     else
     {
@@ -418,7 +418,7 @@ void ESPwebserver::handleUpdateDeviceDataSettings(AsyncWebServerRequest *request
 
         request->send(200, "application/json", JSON);
         Serial.println("WEB:\t\t handleUpdateDeviceDataSettings - send JSON: " + String(JSON));
-        platformData.userSettingsChanged = true;
+        platformData.deviceSettingsChanged = true;
     }
     else
     {
